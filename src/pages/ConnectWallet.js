@@ -64,7 +64,7 @@ export default function() {
                 className={clsx(classes.wallet)}
               >
                 <img
-                  src="/wallets/metamask.svg"
+                  src="wallets/metamask.svg"
                   width="35"
                   height="35"
                   alt="metamask wallet"
@@ -73,7 +73,7 @@ export default function() {
               </div>
               <div onClick={wallet.connectBsc} className={clsx(classes.wallet)}>
                 <img
-                  src="/wallets/bsc.png"
+                  src="wallets/bsc.png"
                   width="35"
                   height="35"
                   alt="bsc wallet"
@@ -85,7 +85,7 @@ export default function() {
                 className={clsx(classes.wallet)}
               >
                 <img
-                  src="/wallets/trust.svg"
+                  src="wallets/trust.svg"
                   width="35"
                   height="35"
                   alt="trust wallet"

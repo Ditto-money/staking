@@ -183,7 +183,7 @@ export default function() {
 
       {!(lpName && dittoAddress) ? null : (
         <Box mt={2}>
-          Get {lpName} by adding liquidity to the DITTO-BNB pool over{' '}
+          Get {lpName} by providing liquidity to the DITTO-BNB pool over{' '}
           <a
             href={`https://exchange.pancakeswap.finance/#/add/ETH/${dittoAddress}`}
             target="_blank"
