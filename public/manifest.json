@@ -1,0 +1,13 @@
+{
+  "name": "Ditto Staking",
+  "description": "Ditto Staking",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone"
+}
