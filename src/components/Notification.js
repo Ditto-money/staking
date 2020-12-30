@@ -100,7 +100,7 @@ function TxContent({ notification }) {
         rel="noopener noreferrer"
         className={classes.small}
       >
-        View on BSC Scan
+        View on BSCScan
       </a>
     </>
   );

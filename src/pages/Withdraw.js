@@ -3,7 +3,7 @@ import * as ethers from 'ethers';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Paper, Button, TextField } from '@material-ui/core';
-import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
+import { useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import { formatUnits } from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
@@ -23,7 +23,7 @@ export const useStyles = makeStyles(theme => ({
   maxButton: {
     height: 35,
   },
-  stakeButton: {
+  withdrawButton: {
     width: 200,
   },
   rewards: {
@@ -55,9 +55,7 @@ export default function() {
     lpName,
   } = useWallet();
 
-  const [isApproving, setIsApproving] = React.useState(false);
-  const [isApproved, setIsApproved] = React.useState(false);
-  const [isUnstaking, setIsUnstaking] = React.useState(false);
+  const [isWithdrawing, setIsWithdrawing] = React.useState(false);
 
   const [monthlyDittoRewards] = React.useState(ethers.BigNumber.from('0'));
   const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
@@ -68,7 +66,7 @@ export default function() {
 
   const { showTxNotification, showErrorNotification } = useNotifications();
   const [amountInput, setAmountInput] = React.useState(0);
-  const [stakeMaxAmount, setUnstakeMaxAmount] = React.useState(false);
+  const [withdrawMaxAmount, setWithdrawMaxAmount] = React.useState(false);
   const amount = React.useMemo(() => {
     try {
       return ethers.utils.parseUnits(amountInput.toString(), lpDecimals);
@@ -77,72 +75,48 @@ export default function() {
     }
   }, [amountInput, lpDecimals]);
 
-  const onConnectOrApproveOrUnstake = async () => {
-    if (!signer) {
-      return startConnectingWallet();
-    }
-    !isApproved ? approve() : unstake();
+  const onConnectOrWithdraw = async () => {
+    !signer ? startConnectingWallet() : withdraw();
   };
 
-  const approve = async () => {
+  const withdraw = async () => {
     try {
-      setIsApproving(true);
-      const tx = await lpContract.approve(STAKING_ADDRESS, amount);
-      showTxNotification(`Approving ${lpName}`, tx.hash);
+      const maxWithdrawAmount = await stakingContract.totalStakedFor(address);
+      const withdrawAmount = withdrawMaxAmount ? maxWithdrawAmount : amount;
+      if (!withdrawMaxAmount && withdrawAmount.gt(maxWithdrawAmount)) {
+        return showErrorNotification(
+          'You are trying to withdrawing more than you deposited.'
+        );
+      }
+      setIsWithdrawing(true);
+      const tx = await stakingContract.unstake(withdrawAmount, EMPTY_CALL_DATA);
+      showTxNotification(`Withdrawing ${lpName}`, tx.hash);
       await tx.wait();
-      showTxNotification(`Approved ${lpName}`, tx.hash);
-      await checkCollateralAllowance();
+      showTxNotification(`Withdrew ${lpName}`, tx.hash);
+      await onSetWithdrawMaxAmount();
     } catch (e) {
       showErrorNotification(e);
     } finally {
-      setIsApproving(false);
+      setIsWithdrawing(false);
     }
   };
 
-  const unstake = async () => {
-    try {
-      setIsUnstaking(true);
-      const tx = await stakingContract.stake(
-        stakeMaxAmount ? await lpContract.balanceOf(address) : amount,
-        EMPTY_CALL_DATA
-      );
-      showTxNotification(`Unstaking ${lpName}`, tx.hash);
-      await tx.wait();
-      showTxNotification(`Unstaked ${lpName}`, tx.hash);
-      await onSetUnstakeMaxAmount();
-    } catch (e) {
-      showErrorNotification(e);
-    } finally {
-      setIsUnstaking(false);
-    }
+  const onSetWithdrawAmount = e => {
+    setWithdrawMaxAmount(false);
+    setAmountInput(e.target.value);
   };
 
-  const checkCollateralAllowance = async () => {
-    if (!(lpContract && address)) return setIsApproved(true);
-    const allowance = await lpContract.allowance(address, STAKING_ADDRESS);
-    setIsApproved(allowance.gte(amount));
-  };
-
-  const onSetUnstakeAmount = e => {
-    setUnstakeMaxAmount(false);
-    setAmountInput(e.target.value || 0);
-  };
-
-  const onSetUnstakeMaxAmount = async () => {
+  const onSetWithdrawMaxAmount = async () => {
     if (!(stakingContract && address)) return;
     const totalStakedFor = await stakingContract.totalStakedFor(address);
     setTotalStakedFor(totalStakedFor);
     setAmountInput(formatUnits(totalStakedFor, 18));
-    setUnstakeMaxAmount(true);
+    setWithdrawMaxAmount(true);
   };
 
   React.useEffect(() => {
-    onSetUnstakeMaxAmount();
+    onSetWithdrawMaxAmount();
   }, [stakingContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  React.useEffect(() => {
-    checkCollateralAllowance();
-  }, [lpContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className={classes.container}>
@@ -153,7 +127,7 @@ export default function() {
             value={amountInput}
             label={
               <div className="flex flex-grow justify-space">
-                <div className="flex-grow">Unstake Amount ({lpName})</div>
+                <div className="flex-grow">Withdraw Amount ({lpName})</div>
                 <div>
                   Deposited: {formatUnits(totalStakedFor, 18)} {lpName}
                 </div>
@@ -166,14 +140,14 @@ export default function() {
               shrink: true,
             }}
             fullWidth
-            onChange={onSetUnstakeAmount}
+            onChange={onSetWithdrawAmount}
           />
 
           <Box className="flex items-end" pl={2}>
             <Button
               color="default"
               variant="outlined"
-              onClick={onSetUnstakeMaxAmount}
+              onClick={onSetWithdrawMaxAmount}
               disabled={!(lpContract && address)}
               className={classes.maxButton}
             >
@@ -202,18 +176,14 @@ export default function() {
         <Button
           color="secondary"
           variant="contained"
-          disabled={isUnstaking || isApproving}
-          onClick={onConnectOrApproveOrUnstake}
-          className={classes.stakeButton}
+          disabled={isWithdrawing}
+          onClick={onConnectOrWithdraw}
+          className={classes.withdrawButton}
         >
-          {isUnstaking
-            ? 'Unstaking...'
-            : isApproving
-            ? 'Approving...'
+          {isWithdrawing
+            ? 'Withdrawing...'
             : !signer
             ? 'Connect Wallet'
-            : !isApproved
-            ? 'Approve'
             : 'Withdraw'}
         </Button>
       </Box>

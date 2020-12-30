@@ -24,7 +24,7 @@ export const useStyles = makeStyles(theme => ({
   maxButton: {
     height: 35,
   },
-  stakeButton: {
+  depositButton: {
     width: 200,
   },
   rewards: {
@@ -49,19 +49,20 @@ export default function() {
     lpContract,
     lpDecimals,
     lpName,
+    lpAddress,
     dittoAddress,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
   const [isApproved, setIsApproved] = React.useState(false);
-  const [isStaking, setIsStaking] = React.useState(false);
+  const [isDepositing, setIsDepositing] = React.useState(false);
 
   const [monthlyDittoRewards] = React.useState(ethers.BigNumber.from('0'));
   const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
 
   const { showTxNotification, showErrorNotification } = useNotifications();
   const [amountInput, setAmountInput] = React.useState(0);
-  const [stakeMaxAmount, setStakeMaxAmount] = React.useState(false);
+  const [depositMaxAmount, setDepositMaxAmount] = React.useState(false);
   const amount = React.useMemo(() => {
     try {
       return ethers.utils.parseUnits(amountInput.toString(), lpDecimals);
@@ -70,11 +71,11 @@ export default function() {
     }
   }, [amountInput, lpDecimals]);
 
-  const onConnectOrApproveOrStake = async () => {
+  const onConnectOrApproveOrDeposit = async () => {
     if (!signer) {
       return startConnectingWallet();
     }
-    !isApproved ? approve() : stake();
+    !isApproved ? approve() : deposit();
   };
 
   const approve = async () => {
@@ -84,7 +85,7 @@ export default function() {
       showTxNotification(`Approving ${lpName}`, tx.hash);
       await tx.wait();
       showTxNotification(`Approved ${lpName}`, tx.hash);
-      await checkCollateralAllowance();
+      await checkAllowance();
     } catch (e) {
       showErrorNotification(e);
     } finally {
@@ -92,45 +93,53 @@ export default function() {
     }
   };
 
-  const stake = async () => {
+  const deposit = async () => {
     try {
-      setIsStaking(true);
-      const tx = await stakingContract.stake(
-        stakeMaxAmount ? await lpContract.balanceOf(address) : amount,
-        EMPTY_CALL_DATA
-      );
-      showTxNotification(`Staking ${lpName}`, tx.hash);
+      const maxDepositAmount = await lpContract.balanceOf(address);
+      const depositAmount = depositMaxAmount ? maxDepositAmount : amount;
+      if (!depositMaxAmount && depositAmount.gt(maxDepositAmount)) {
+        return showErrorNotification(
+          'You are trying to deposit more than your actual balance.'
+        );
+      }
+      setIsDepositing(true);
+      const tx = await stakingContract.stake(depositAmount, EMPTY_CALL_DATA);
+      showTxNotification(`Depositing ${lpName}`, tx.hash);
       await tx.wait();
-      showTxNotification(`Staked ${lpName}`, tx.hash);
+      showTxNotification(`Deposited ${lpName}`, tx.hash);
+      onSetDepositMaxAmount();
     } catch (e) {
       showErrorNotification(e);
     } finally {
-      setIsStaking(false);
+      setIsDepositing(false);
     }
   };
 
-  const checkCollateralAllowance = async () => {
-    if (!(lpContract && address)) return setIsApproved(true);
+  const checkAllowance = async () => {
+    if (!(lpContract && address && amount)) return setIsApproved(true);
     const allowance = await lpContract.allowance(address, STAKING_ADDRESS);
     setIsApproved(allowance.gte(amount));
   };
 
-  const onSetStakeAmount = e => {
-    setStakeMaxAmount(false);
-    setAmountInput(e.target.value || 0);
+  const onSetDepositAmount = e => {
+    setDepositMaxAmount(false);
+    setAmountInput(e.target.value);
   };
 
-  const onSetStakeMaxAmount = async () => {
+  const onSetDepositMaxAmount = async () => {
     if (!(lpContract && address)) return;
     setAmountInput(
       formatUnits(await lpContract.balanceOf(address), lpDecimals)
     );
-    setStakeMaxAmount(true);
+    setDepositMaxAmount(true);
   };
 
   React.useEffect(() => {
-    checkCollateralAllowance();
-    onSetStakeMaxAmount();
+    checkAllowance();
+  }, [lpContract, address, amount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  React.useEffect(() => {
+    onSetDepositMaxAmount();
   }, [lpContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
@@ -142,9 +151,9 @@ export default function() {
             value={amountInput}
             label={
               <div className="flex flex-grow justify-space">
-                <div className="flex-grow">Stake Amount ({lpName})</div>
+                <div className="flex-grow">Deposit Amount ({lpName})</div>
                 <div>
-                  <Balance header="Available" tokenAddress={dittoAddress} />
+                  <Balance header="Available" tokenAddress={lpAddress} />
                 </div>
               </div>
             }
@@ -155,14 +164,14 @@ export default function() {
               shrink: true,
             }}
             fullWidth
-            onChange={onSetStakeAmount}
+            onChange={onSetDepositAmount}
           />
 
           <Box className="flex items-end" pl={2}>
             <Button
               color="default"
               variant="outlined"
-              onClick={onSetStakeMaxAmount}
+              onClick={onSetDepositMaxAmount}
               disabled={!(lpContract && address)}
               className={classes.maxButton}
             >
@@ -198,12 +207,12 @@ export default function() {
         <Button
           color="secondary"
           variant="contained"
-          disabled={isStaking || isApproving}
-          onClick={onConnectOrApproveOrStake}
-          className={classes.stakeButton}
+          disabled={isDepositing || isApproving}
+          onClick={onConnectOrApproveOrDeposit}
+          className={classes.depositButton}
         >
-          {isStaking
-            ? 'Staking...'
+          {isDepositing
+            ? 'Depositing...'
             : isApproving
             ? 'Approving...'
             : !signer

@@ -1,9 +1,8 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Paper } from '@material-ui/core';
-import { Router, Route, Switch, Redirect } from 'react-router-dom';
-import { createBrowserHistory } from 'history';
-import { BORDER_RADIUS } from 'config';
+import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import { BORDER_RADIUS, ROUTER_BASE_NAME } from 'config';
 import Header from './Header';
 import TopStats from './TopStats';
 import Nav from './Nav';
@@ -11,8 +10,6 @@ import Withdraw from './Withdraw';
 import Deposit from './Deposit';
 import Stats from './Stats';
 import ConnectWallet from './ConnectWallet';
-
-const history = createBrowserHistory();
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -38,7 +35,7 @@ export default function App() {
 
   return (
     <div className={classes.container}>
-      <Router {...{ history }}>
+      <BrowserRouter basename={ROUTER_BASE_NAME}>
         <Header />
         <TopStats />
         <Paper className={classes.paper}>
@@ -53,7 +50,7 @@ export default function App() {
           </div>
         </Paper>
         <ConnectWallet />
-      </Router>
+      </BrowserRouter>
     </div>
   );
 }
