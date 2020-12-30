@@ -92,7 +92,7 @@ function TxContent({ notification }) {
       <strong className={classes.small}>{notification.description}</strong>
 
       <a
-        href={`https://${IS_TESTNET ? 'testnet.' : ''}bscscan.io/tx/${
+        href={`https://${IS_TESTNET ? 'testnet.' : ''}bscscan.com/tx/${
           notification.hash
         }`}
         target="_blank"
