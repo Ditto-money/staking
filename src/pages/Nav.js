@@ -31,10 +31,10 @@ const useStyles = makeStyles(theme => ({
 
 function Component() {
   const classes = useStyles();
-  const path = window.location.pathname;
-  const isDeposit = '/deposit' === path;
-  const isWithdraw = '/withdraw' === path;
-  const isStats = '/stats' === path;
+  const path = window.location.hash;
+  const isDeposit = '#/deposit' === path;
+  const isWithdraw = '#/withdraw' === path;
+  const isStats = '#/stats' === path;
 
   return (
     <div className={clsx('flex flex-col flex-grow', classes.container)}>

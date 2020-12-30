@@ -1,7 +1,12 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
 import { Paper } from '@material-ui/core';
-import { BrowserRouter, Route, Switch, Redirect } from 'react-router-dom';
+import {
+  HashRouter as Router,
+  Route,
+  Switch,
+  Redirect,
+} from 'react-router-dom';
 import { BORDER_RADIUS, ROUTER_BASE_NAME } from 'config';
 import Header from './Header';
 import TopStats from './TopStats';
@@ -35,7 +40,7 @@ export default function App() {
 
   return (
     <div className={classes.container}>
-      <BrowserRouter basename={ROUTER_BASE_NAME}>
+      <Router basename={ROUTER_BASE_NAME}>
         <Header />
         <TopStats />
         <Paper className={classes.paper}>
@@ -50,7 +55,7 @@ export default function App() {
           </div>
         </Paper>
         <ConnectWallet />
-      </BrowserRouter>
+      </Router>
     </div>
   );
 }
