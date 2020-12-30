@@ -1,6 +1,7 @@
 import React from 'react';
 import * as ethers from 'ethers';
 import clsx from 'clsx';
+import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Paper } from '@material-ui/core';
 import { BORDER_RADIUS } from 'config';
@@ -33,19 +34,18 @@ export default function() {
   const { stakingContract } = useWallet();
 
   const [totalDeposits, setTotalDeposits] = React.useState(
-    ethers.BigNumber.from('1')
-  );
-  const [programDuration, setProgramDuration] = React.useState(
     ethers.BigNumber.from('0')
   );
+  const [programDuration, setProgramDuration] = React.useState(0);
+
   const loadStats = async () => {
     if (!stakingContract) return;
-    const [totalLocked, bonusPeriodSec] = await Promise.all([
+    const [totalLocked, schedule] = await Promise.all([
       stakingContract.totalLocked(),
-      stakingContract.bonusPeriodSec(),
+      stakingContract.unlockSchedules(0),
     ]);
     setTotalDeposits(totalLocked);
-    setProgramDuration(bonusPeriodSec);
+    setProgramDuration(schedule.endAtSec.toNumber());
   };
 
   const stats = React.useMemo(
@@ -57,7 +57,7 @@ export default function() {
 
       {
         name: 'Program duration',
-        value: [`${toFixed(programDuration, 60, 2)} days left`],
+        value: [<Countdown to={programDuration} />],
       },
     ],
     [totalDeposits, programDuration]
@@ -89,4 +89,20 @@ function StatBox({ name, value }) {
       </div>
     </Paper>
   );
+}
+
+function Countdown({ to }) {
+  const [duration, setDuration] = React.useState('-');
+
+  React.useEffect(() => {
+    if (!to) return;
+    const id = setInterval(() => {
+      setDuration(`${moment.unix(to).from(moment.utc(), true)} left`);
+    }, 1000);
+    return () => {
+      clearInterval(id);
+    };
+  }, [to]);
+
+  return <div>{duration}</div>;
 }

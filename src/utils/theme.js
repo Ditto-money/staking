@@ -3,7 +3,7 @@ import { BORDER_RADIUS } from 'config';
 
 export default createMuiTheme({
   typography: {
-    fontFamily: '"Ubuntu Mono", sans-serif',
+    fontFamily: '"Rubik", sans-serif',
   },
   palette: {
     type: 'dark',

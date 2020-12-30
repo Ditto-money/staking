@@ -104,7 +104,7 @@ function ERC20({ header, tokenAddress }) {
     decimals &&
     balance && (
       <div className={classes.container}>
-        {header}: {formatUnits(balance, decimals)} {symbol}
+        {header}: {formatUnits(balance, decimals)} {symbol.toUpperCase()}
       </div>
     )
   );

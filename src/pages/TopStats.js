@@ -67,8 +67,18 @@ export default function() {
       {
         name: 'Rewards Earned',
         value: [
-          `${formatUnits(availableDittoRewards, dittoDecimals)} DITT0`,
-          `${formatUnits(availableCakeRewards, cakeDecimals)} CAKE`,
+          <div className="flex items-center">
+            {formatUnits(availableDittoRewards, dittoDecimals)} DITT0
+            <Box ml={1} className="flex items-center">
+              <img src="coins/DITTO.png" alt="DITTO" width={15} height={15} />
+            </Box>
+          </div>,
+          <div className="flex items-center">
+            {formatUnits(availableCakeRewards, cakeDecimals)} CAKE&nbsp;
+            <Box ml={1} className="flex items-center">
+              <img src="coins/CAKE.png" alt="CAKE" width={15} height={15} />
+            </Box>
+          </div>,
         ],
       },
     ],

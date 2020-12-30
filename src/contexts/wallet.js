@@ -28,7 +28,7 @@ export function WalletProvider({ children }) {
   const [isConnecting, setIsConnecting] = React.useState(false);
   const [chainId, setChainId] = React.useState(null);
 
-  const [lpName] = React.useState('Cake-LP');
+  const [lpName] = React.useState('CAKE-LP');
   const [lpAddress, setLpAddress] = React.useState(null);
   const [lpDecimals] = React.useState(18);
 

@@ -17,7 +17,6 @@ const useStyles = makeStyles(theme => ({
   },
   container: {
     padding: '10px 20px 10px 10px',
-    lineHeight: '1.5rem',
     '& a': {
       color: 'white',
       display: 'block',

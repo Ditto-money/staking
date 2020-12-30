@@ -83,6 +83,8 @@ export default function() {
     try {
       const maxWithdrawAmount = await stakingContract.totalStakedFor(address);
       const withdrawAmount = withdrawMaxAmount ? maxWithdrawAmount : amount;
+      if (withdrawAmount.isZero())
+        return showErrorNotification('Enter withdrawal amount.');
       if (!withdrawMaxAmount && withdrawAmount.gt(maxWithdrawAmount)) {
         return showErrorNotification(
           'You are trying to withdrawing more than you deposited.'

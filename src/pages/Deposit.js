@@ -97,6 +97,8 @@ export default function() {
     try {
       const maxDepositAmount = await lpContract.balanceOf(address);
       const depositAmount = depositMaxAmount ? maxDepositAmount : amount;
+      if (depositAmount.isZero())
+        return showErrorNotification('Enter deposit amount.');
       if (!depositMaxAmount && depositAmount.gt(maxDepositAmount)) {
         return showErrorNotification(
           'You are trying to deposit more than your actual balance.'
