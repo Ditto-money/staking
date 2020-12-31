@@ -125,6 +125,7 @@ export function WalletProvider({ children }) {
     cache(CACHE_WALLET_KEY, null);
     setSigner(null);
     setAddress(null);
+    setChainId(null);
   }
 
   // async function loadLpInfo() {

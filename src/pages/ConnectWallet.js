@@ -110,6 +110,8 @@ export default function() {
               Please connect to Binance Smart Chain{' '}
               <span className={classes.net}>{NETWORK_NAME}</span>
             </strong>
+            <div>or</div>
+            <div onClick={() => wallet.disconnect}>disconnect</div>
           </Box>
         )}
       </div>

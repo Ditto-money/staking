@@ -2,6 +2,7 @@ import React from 'react';
 import * as ethers from 'ethers';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
+import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -10,12 +11,15 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Typography,
 } from '@material-ui/core';
 import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
 import { formatUnits } from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
+import ERC20_CONTRACT_ABI from 'abis/erc20.json';
+import sleep from 'utils/sleep';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -46,7 +50,123 @@ export const useStyles = makeStyles(theme => ({
   },
 }));
 
-export default function() {
+const STEPS = ['Get Liquidity Pool Tokens', 'Stake'];
+
+export default withRouter(function() {
+  const classes = useStyles();
+  const activeStep = ~window.location.hash.indexOf('2') ? 1 : 0;
+
+  return (
+    <Box className={classes.container}>
+      <Stepper activeStep={activeStep}>
+        {STEPS.map(label => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+
+      <Box mx={5} mb={4}>
+        <Switch>
+          <Route path={'/deposit/2'} component={Deposit} />
+          <Route path={'/deposit/1'} component={GetLPTokens} />
+          <Redirect to={'/deposit/1'} />
+        </Switch>
+      </Box>
+    </Box>
+  );
+});
+
+function GetLPTokens({ history }) {
+  const classes = useStyles();
+  const {
+    startConnecting: startConnectingWallet,
+    lpName,
+    lpAddress,
+    lpDecimals,
+    dittoAddress,
+    address,
+    signer,
+  } = useWallet();
+  const [balance, setBalance] = React.useState(ethers.BigNumber.from('0'));
+
+  const contract = React.useMemo(
+    () =>
+      signer &&
+      lpAddress &&
+      new ethers.Contract(lpAddress, ERC20_CONTRACT_ABI, signer),
+    [lpAddress, signer]
+  );
+
+  const onBalanceChange = async (from, to) => {
+    if (from === address || to === address) {
+      await sleep(500);
+      setBalance(await contract.balanceOf(address));
+    }
+  };
+
+  const connectWalletOrNext = async () => {
+    !address ? startConnectingWallet() : history.push('/deposit/2');
+  };
+
+  const load = async () => {
+    if (!(contract && address)) return;
+    const balance = await contract.balanceOf(address);
+    setBalance(balance);
+  };
+
+  const subscribe = () => {
+    if (!contract) return () => {};
+    const transferEvent = contract.filters.Transfer();
+    contract.on(transferEvent, onBalanceChange);
+    return () => {
+      contract.off(transferEvent, onBalanceChange);
+    };
+  };
+
+  React.useEffect(() => {
+    load();
+    return subscribe(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contract, address]);
+
+  return !(dittoAddress && lpAddress) ? null : (
+    <>
+      {!address ? null : (
+        <Box mt={2}>
+          <Typography variant="h5">
+            You have {formatUnits(balance, lpDecimals)} {lpName} Tokens.
+          </Typography>
+        </Box>
+      )}
+
+      <Box mt={2}>
+        Get {!address ? `Liquidity Pool Tokens (${lpName})` : 'more'} by
+        providing liquidity to the DITTO-BNB Pool over{' '}
+        <a
+          href={`https://exchange.pancakeswap.finance/#/add/ETH/${dittoAddress}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          here
+        </a>
+        .
+      </Box>
+
+      <Box mt={2}>
+        <Button
+          color="secondary"
+          variant="contained"
+          onClick={connectWalletOrNext}
+          className={classes.depositButton}
+        >
+          {!address ? 'Connect Wallet' : 'Stake →'}
+        </Button>
+      </Box>
+    </>
+  );
+}
+
+function Deposit() {
   const classes = useStyles();
 
   const {
@@ -58,7 +178,6 @@ export default function() {
     lpDecimals,
     lpName,
     lpAddress,
-    dittoAddress,
   } = useWallet();
 
   const [isApproving, setIsApproving] = React.useState(false);
@@ -66,7 +185,7 @@ export default function() {
   const [isDepositing, setIsDepositing] = React.useState(false);
 
   const [monthlyDittoRewards] = React.useState(ethers.BigNumber.from('0'));
-  const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
+  // const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
 
   const { showTxNotification, showErrorNotification } = useNotifications();
   const [amountInput, setAmountInput] = React.useState(0);
@@ -153,15 +272,7 @@ export default function() {
   }, [lpContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className={classes.container}>
-      <Stepper activeStep={activeStep}>
-        {steps.map(label => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
-
+    <>
       {!lpName ? null : (
         <div className={'flex'}>
           <TextField
@@ -199,25 +310,11 @@ export default function() {
         </div>
       )}
 
-      {!(lpName && dittoAddress) ? null : (
-        <Box mt={2}>
-          Get {lpName} by providing liquidity to the DITTO-BNB pool over{' '}
-          <a
-            href={`https://exchange.pancakeswap.finance/#/add/ETH/${dittoAddress}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            here
-          </a>
-          .
-        </Box>
-      )}
-
       <Box mt={2}>
         <Paper className={clsx(classes.rewards)}>
           <div>Your Estimated Rewards:</div>
-          <div>{formatUnits(monthlyDittoRewards, 18)} DITTO / month</div>
-          <div>{formatUnits(monthlyCakeRewards, 18)} CAKE / month</div>
+          <div>{formatUnits(monthlyDittoRewards, 18)} DITTO / month plus,</div>
+          <div>CAKE depending on Pancakeswap emission.</div>
         </Paper>
       </Box>
 
@@ -240,6 +337,6 @@ export default function() {
             : 'Deposit'}
         </Button>
       </Box>
-    </div>
+    </>
   );
 }

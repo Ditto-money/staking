@@ -10,7 +10,7 @@ export const IS_TESTNET = false; //~window.location.href.indexOf('testnet');
 
 export const NETWORKS = {
   56: {
-    stakingAddress: '0x14bF1C9d2a9e5e79CdC166B1F4e2AD9DAc0E956F',
+    stakingAddress: '0x770ba80ee58be2f362549a86fd5aee5fecb7fcc5',
   },
   97: {
     stakingAddress: '',
