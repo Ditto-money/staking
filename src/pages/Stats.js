@@ -40,12 +40,12 @@ export default function() {
 
   const loadStats = async () => {
     if (!stakingContract) return;
-    const [totalLocked, schedule] = await Promise.all([
-      stakingContract.totalLocked(),
-      stakingContract.unlockSchedules(0),
-    ]);
-    setTotalDeposits(totalLocked);
-    setProgramDuration(schedule.endAtSec.toNumber());
+    setTotalDeposits(await stakingContract.totalLocked());
+    try {
+      setProgramDuration(
+        (await stakingContract.unlockSchedules(0)).endAtSec.toNumber()
+      );
+    } catch {}
   };
 
   const stats = React.useMemo(
