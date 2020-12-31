@@ -1,5 +1,4 @@
 import React from 'react';
-import * as ethers from 'ethers';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Paper } from '@material-ui/core';
@@ -29,28 +28,8 @@ const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-  const { address, stakingContract, dittoDecimals, cakeDecimals } = useWallet();
-  const { apy } = useStats();
-
-  const [availableDittoRewards, setAvailableDittoRewards] = React.useState(
-    ethers.BigNumber.from('0')
-  );
-  const [availableCakeRewards, setAvailableCakeRewards] = React.useState(
-    ethers.BigNumber.from('0')
-  );
-
-  const loadStats = async () => {
-    if (!(stakingContract && address)) return;
-    const [availableCakeRewards] = await Promise.all([
-      stakingContract.pendingCakeByUser(address),
-    ]);
-    setAvailableCakeRewards(availableCakeRewards);
-    setAvailableDittoRewards(availableCakeRewards);
-  };
-
-  React.useEffect(() => {
-    loadStats();
-  }, [stakingContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { dittoDecimals, cakeDecimals } = useWallet();
+  const { apy, availableDittoRewards, availableCakeRewards } = useStats();
 
   const stats = React.useMemo(
     () => [

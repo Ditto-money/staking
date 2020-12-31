@@ -16,10 +16,11 @@ import {
 import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
-import { formatUnits } from 'utils/big-number';
+import { formatUnits, Big, isZero } from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import sleep from 'utils/sleep';
+import { useStats } from 'contexts/stats';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -180,12 +181,18 @@ function Deposit() {
     lpAddress,
   } = useWallet();
 
+  const {
+    monthlyUnlockRate,
+    totalStakingShares,
+    totalStaked,
+    totalStakingShareSeconds,
+    totalStakedFor,
+    userStakingShareSeconds,
+  } = useStats();
+
   const [isApproving, setIsApproving] = React.useState(false);
   const [isApproved, setIsApproved] = React.useState(false);
   const [isDepositing, setIsDepositing] = React.useState(false);
-
-  const [monthlyDittoRewards] = React.useState(ethers.BigNumber.from('0'));
-  // const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
 
   const { showTxNotification, showErrorNotification } = useNotifications();
   const [inputAmount, setInputAmount] = React.useState(0);
@@ -194,10 +201,15 @@ function Deposit() {
     ethers.BigNumber.from('0')
   );
   const depositAmount = React.useMemo(() => {
-    const inputAmountBN = ethers.utils.parseUnits(
-      inputAmount.toString(),
-      lpDecimals
-    );
+    let inputAmountBN;
+    try {
+      inputAmountBN = ethers.utils.parseUnits(
+        inputAmount.toString(),
+        lpDecimals
+      );
+    } catch (e) {
+      inputAmountBN = ethers.BigNumber.from('0');
+    }
     return depositMaxAmount ? maxDepositAmount : inputAmountBN;
   }, [inputAmount, maxDepositAmount, depositMaxAmount, lpDecimals]);
 
@@ -251,9 +263,69 @@ function Deposit() {
     setIsApproved(allowance.gte(depositAmount));
   };
 
-  const onSetDepositAmount = e => {
+  const monthlyDittoRewards = React.useMemo(() => {
+    if (
+      !(
+        depositAmount &&
+        monthlyUnlockRate &&
+        totalStakingShares &&
+        totalStaked &&
+        totalStakingShareSeconds &&
+        totalStakedFor &&
+        userStakingShareSeconds
+      )
+    )
+      return Big('0');
+    const r = 2592e3;
+    const n = Big(depositAmount);
+    const t = {
+      totalStakingShares,
+      totalStaked,
+      totalStakingShareSeconds,
+    };
+    const e = {
+      totalStakedFor,
+      userStakingShareSeconds,
+    };
+    const i = isZero(t.totalStaked)
+      ? Big('0')
+      : e.totalStakedFor.mul(t.totalStakingShares).div(t.totalStaked);
+    const o = isZero(t.totalStaked)
+      ? Big('0')
+      : n.mul(t.totalStakingShares).div(t.totalStaked);
+    const b = t.totalStakingShareSeconds.add(
+      t.totalStakingShares.add(o).mul(r)
+    );
+    // console.log(
+    //   t.totalStaked.toString(),
+    //   n.toString(),
+    //   t.totalStakingShares.toString()
+    // );
+    // console.log(
+    //   monthlyUnlockRate.toString(),
+    //   'f',
+    //   i.toString(),
+    //   o.toString(),
+    //   b.toString()
+    // );
+    const a = isZero(b)
+      ? Big('0')
+      : e.userStakingShareSeconds.add(i.add(o).mul(r)).div(b);
+
+    return monthlyUnlockRate.mul(a);
+  }, [
+    depositAmount,
+    monthlyUnlockRate,
+    totalStakingShares,
+    totalStaked,
+    totalStakingShareSeconds,
+    totalStakedFor,
+    userStakingShareSeconds,
+  ]);
+
+  const onSetDepositAmount = event => {
     setDepositMaxAmount(false);
-    setInputAmount(e.target.value);
+    setInputAmount(event.target.value);
   };
 
   const onSetDepositMaxAmount = async () => {

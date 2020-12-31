@@ -1,4 +1,7 @@
 import BigJs from 'big.js';
+import toformat from 'toformat';
+
+toformat(BigJs);
 
 const PRECISION = 4;
 
@@ -8,7 +11,7 @@ export function toFixed(a, b, precision) {
   }
   return Big(a)
     .div(Big(b))
-    .toFixed(precision ?? PRECISION);
+    .toFormat(precision ?? PRECISION);
 }
 
 export function formatUnits(a, decimals, precision) {
@@ -16,7 +19,7 @@ export function formatUnits(a, decimals, precision) {
 }
 
 export function isZero(a) {
-  return a.eq(Big('0'));
+  return Big(a).eq(Big('0'));
 }
 
 export function Big(n) {

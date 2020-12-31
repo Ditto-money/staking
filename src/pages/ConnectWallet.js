@@ -112,7 +112,7 @@ export default function() {
             </strong>
             <div>or</div>
             <div className="cursor-pointer" onClick={() => wallet.disconnect}>
-              disconnect -({wallet.chainId})
+              disconnect
             </div>
           </Box>
         )}

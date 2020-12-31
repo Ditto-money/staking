@@ -1,5 +1,6 @@
 import React from 'react';
-import { Big } from 'utils/big-number';
+// import * as ethers from 'ethers';
+import { Big, isZero } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
 
 const StatsContext = React.createContext(null);
@@ -14,11 +15,30 @@ export function StatsProvider({ children }) {
     lpDecimals,
     wrappedBNBDecimals,
     dittoDecimals,
+    address,
   } = useWallet();
 
   const [apy, setAPY] = React.useState(Big('0'));
+  const [monthlyUnlockRate, setMonthlyUnlockRate] = React.useState(Big('0'));
   const [totalDeposits, setTotalDeposits] = React.useState(Big('0'));
   const [programDuration, setProgramDuration] = React.useState(0);
+  const [availableDittoRewards, setAvailableDittoRewards] = React.useState(
+    Big('0')
+  );
+  const [availableCakeRewards, setAvailableCakeRewards] = React.useState(
+    Big('0')
+  );
+
+  const [totalStakingShares, setTotalStakingShares] = React.useState(Big('0'));
+  const [totalStaked, setTotalStaked] = React.useState(Big('0'));
+  const [
+    totalStakingShareSeconds,
+    setTotalStakingShareSeconds,
+  ] = React.useState(Big('0'));
+  const [totalStakedFor, setTotalStakedFor] = React.useState(Big('0'));
+  const [userStakingShareSeconds, setUserStakingShareSeconds] = React.useState(
+    Big('0')
+  );
 
   const loadStats = async () => {
     if (
@@ -31,7 +51,6 @@ export function StatsProvider({ children }) {
       )
     )
       return;
-
     const v = await Promise.all([
       0, // stakingContract.updateAccounting(), // 0
       stakingContract.totalStaked(), // 1
@@ -43,6 +62,10 @@ export function StatsProvider({ children }) {
       wrappedBNBContract.balanceOf(lpAddress), // 7
       dittoContract.balanceOf(lpAddress), // 8
     ]);
+
+    setTotalStakingShares(Big(v[4]));
+    setTotalStaked(Big(v[1]));
+    setUserStakingShareSeconds(Big(v[4])); // parseInt(totalStakingShares), parseInt(updateAccounting[2]))
 
     // const l = 18;
     const c = lpDecimals; // lp
@@ -63,65 +86,86 @@ export function StatsProvider({ children }) {
     const T = Big(v[7]).div(10 ** p);
     const C = Big(v[8]).div(10 ** m);
 
-    const A = Big('1'); // price of Ditto
-    // C: 82772.14027431;
-    // E: 0.07200446090062249; // stakingContract.totalSupply
-    // I: 0.11845874260168594;
-    // N: 15929.034962326905;
-    // O: 51696.91293764091;
-    // P: 82772.14027431;
-    // T: 116.43448859829034;
     const k = Big('37'); // price of BNB
-    // w: 0.008529557899999998; // stakingContract.totalStaked
-
+    const A = Big('1'); // price of Ditto
     const O = k.mul(T);
     const P = A.mul(C);
-    const I = w.div(E);
-    // console.log(r);
-    const N = O.add(P).mul(I);
 
-    console.log('deposits', N.toString());
-    setTotalDeposits(N);
+    const I = w.div(E);
+    const N = O.add(P)
+      .mul(I)
+      .div(1e9); // div 1e9: probably an issue in smart contract
+
+    // console.log(
+    //   Object.entries({ N, O, P, I, k, T, A, C, w, E }).reduce((r, [k, v]) => {
+    //     r[k] = v.toString();
+    //     return r;
+    //   }, {})
+    // );
+
+    // console.log('deposits', N.toString());
+    setTotalDeposits(Big(N));
 
     const noOfSchedules = await stakingContract.unlockScheduleCount();
-    console.log(noOfSchedules.toNumber());
+    // const noOfSchedules = ethers.BigNumber.from('1');
     if (!noOfSchedules.isZero()) {
-      const schedules = [];
+      const schedules = [
+        // {
+        //   initialLockedShares: Big('100000000000000000'),
+        //   unlockedShares: Big('100000000000000000'),
+        //   lastUnlockTimestampSec: Big('1605151412'),
+        //   endAtSec: Big('1605151412'),
+        //   durationSec: Big('259200'),
+        // },
+      ];
+
       for (let b = 0; b < noOfSchedules.toNumber(); b++) {
         const schedule = await stakingContract.unlockSchedules(
           noOfSchedules.sub(1).toNumber()
         );
-        schedules.push(schedule);
+        schedules.push({
+          initialLockedShares: Big(schedule.initialLockedShares),
+          unlockedShares: Big(schedule.unlockedShares),
+          lastUnlockTimestampSec: Big(schedule.lastUnlockTimestampSec),
+          endAtSec: Big(schedule.endAtSec),
+          durationSec: Big(schedule.durationSec),
+        });
       }
-      setProgramDuration(schedules[schedules.length].endAtSec.toNumber());
+
+      setProgramDuration(schedules[schedules.length - 1].endAtSec);
 
       const [s, a] = await Promise.all([
         stakingContract.totalLockedShares(),
         stakingContract.totalLocked(),
       ]);
 
-      const i = 60 * 60 * 24 * 30; // 2592e3
+      const i = Big((60 * 60 * 24 * 30).toString()); // 2592e3
 
       const ip = (t, e) => (t.gte(e) ? t : e);
       const op = (t, e) => (t.lte(e) ? t : e);
 
       const hha = schedules.reduce((t, schedule) => {
         return t.add(
-          op(ip(schedule.endAtSec.sub(m), 0), i)
+          op(ip(schedule.endAtSec.sub(m), Big('0')), i)
             .div(schedule.durationSec)
             .mul(schedule.initialLockedShares)
         );
-      }, 0);
+      }, Big('0'));
 
-      const hh = hha.div(a).mul(s);
-
-      let apy = hh.div(N).mul(12);
+      const monthlyUnlockRate = isZero(a)
+        ? Big('0')
+        : hha
+            .div(a)
+            .mul(s)
+            .div(N);
+      let apy = monthlyUnlockRate.mul(12);
       if (apy.gte(1e6)) {
         apy = Big(1e6);
       }
 
-      console.log('apy', apy.toString());
-      setAPY(apy);
+      // console.log('apy', apy.toString());
+      setMonthlyUnlockRate(Big(monthlyUnlockRate));
+      setAPY(Big(apy));
     }
   };
 
@@ -138,12 +182,52 @@ export function StatsProvider({ children }) {
     dittoDecimals,
   ]);
 
+  const loadUserStats = async () => {
+    if (!(stakingContract && address)) return;
+    const [availableCakeRewards, totalStakedFor] = await Promise.all([
+      stakingContract.pendingCakeByUser(address),
+      stakingContract.totalStakedFor(address),
+    ]);
+    setAvailableCakeRewards(Big(availableCakeRewards));
+    setAvailableDittoRewards(Big('0'));
+
+    setTotalStakedFor(Big(totalStakedFor));
+
+    // Promise.all([
+    //   totalLocked(),
+    //   totalUnlocked(),
+    //   totals.stakingShareSeconds,
+    // _totalStakingShareSeconds,
+    // totalUserRewards,
+    // now
+
+    const [
+      ,
+      ,
+      stakingShareSeconds,
+    ] = await stakingContract.callStatic.updateAccounting();
+    setTotalStakingShareSeconds(Big(stakingShareSeconds));
+  };
+
+  React.useEffect(() => {
+    loadUserStats();
+  }, [stakingContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <StatsContext.Provider
       value={{
         apy,
+        monthlyUnlockRate,
         totalDeposits,
         programDuration,
+        availableDittoRewards,
+        availableCakeRewards,
+
+        totalStakingShares,
+        totalStaked,
+        totalStakingShareSeconds,
+        totalStakedFor,
+        userStakingShareSeconds,
       }}
     >
       {children}
@@ -156,11 +240,33 @@ export function useStats() {
   if (!context) {
     throw new Error('Missing stats context');
   }
-  const { apy, totalDeposits, programDuration } = context;
+  const {
+    apy,
+    monthlyUnlockRate,
+    totalDeposits,
+    programDuration,
+    availableDittoRewards,
+    availableCakeRewards,
+
+    totalStakingShares,
+    totalStaked,
+    totalStakingShareSeconds,
+    totalStakedFor,
+    userStakingShareSeconds,
+  } = context;
 
   return {
     apy,
+    monthlyUnlockRate,
     totalDeposits,
     programDuration,
+    availableDittoRewards,
+    availableCakeRewards,
+
+    totalStakingShares,
+    totalStaked,
+    totalStakingShareSeconds,
+    totalStakedFor,
+    userStakingShareSeconds,
   };
 }

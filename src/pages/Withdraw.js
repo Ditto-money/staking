@@ -7,6 +7,7 @@ import { useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import { formatUnits } from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
+import { useStats } from 'contexts/stats';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -54,11 +55,9 @@ export default function() {
     lpDecimals,
     lpName,
   } = useWallet();
+  const { availableDittoRewards, availableCakeRewards } = useStats();
 
   const [isWithdrawing, setIsWithdrawing] = React.useState(false);
-
-  const [monthlyDittoRewards] = React.useState(ethers.BigNumber.from('0'));
-  const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
 
   const [totalStakedFor, setTotalStakedFor] = React.useState(
     ethers.BigNumber.from('0')
@@ -71,10 +70,15 @@ export default function() {
     ethers.BigNumber.from('0')
   );
   const withdrawAmount = React.useMemo(() => {
-    const inputAmountBN = ethers.utils.parseUnits(
-      inputAmount.toString(),
-      lpDecimals
-    );
+    let inputAmountBN;
+    try {
+      inputAmountBN = ethers.utils.parseUnits(
+        inputAmount.toString(),
+        lpDecimals
+      );
+    } catch (e) {
+      inputAmountBN = ethers.BigNumber.from('0');
+    }
     return withdrawMaxAmount ? maxWithdrawAmount : inputAmountBN;
   }, [inputAmount, maxWithdrawAmount, withdrawMaxAmount, lpDecimals]);
 
@@ -170,9 +174,9 @@ export default function() {
         </Paper>
 
         <Paper className={clsx(classes.rewards)}>
-          <div>Rewards Claimed:</div>
-          <div>{formatUnits(monthlyDittoRewards, 18)} DITTO</div>
-          <div>{formatUnits(monthlyCakeRewards, 18)} CAKE</div>
+          <div>Rewards Earned:</div>
+          <div>{formatUnits(availableDittoRewards, 18)} DITTO</div>
+          <div>{formatUnits(availableCakeRewards, 18)} CAKE</div>
         </Paper>
       </Box>
 
