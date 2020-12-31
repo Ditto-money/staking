@@ -2,7 +2,15 @@ import React from 'react';
 import * as ethers from 'ethers';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Paper, Button, TextField } from '@material-ui/core';
+import {
+  Box,
+  Paper,
+  Button,
+  TextField,
+  Stepper,
+  Step,
+  StepLabel,
+} from '@material-ui/core';
 import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
@@ -146,6 +154,14 @@ export default function() {
 
   return (
     <div className={classes.container}>
+      <Stepper activeStep={activeStep}>
+        {steps.map(label => (
+          <Step key={label}>
+            <StepLabel>{label}</StepLabel>
+          </Step>
+        ))}
+      </Stepper>
+
       {!lpName ? null : (
         <div className={'flex'}>
           <TextField
