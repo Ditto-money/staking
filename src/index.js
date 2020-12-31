@@ -12,6 +12,7 @@ import { SnackbarProvider } from 'notistack';
 import muiTheme from 'utils/theme';
 import { WalletProvider } from 'contexts/wallet';
 import { NotificationsProvider } from 'contexts/notifications';
+import { StatsProvider } from 'contexts/stats';
 import Notification from 'components/Notification';
 import * as serviceWorker from 'serviceWorker';
 
@@ -58,7 +59,9 @@ function Shell() {
     >
       <NotificationsProvider>
         <WalletProvider>
-          <App />
+          <StatsProvider>
+            <App />
+          </StatsProvider>
         </WalletProvider>
       </NotificationsProvider>
     </SnackbarProvider>

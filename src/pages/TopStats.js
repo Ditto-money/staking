@@ -6,6 +6,7 @@ import { Box, Paper } from '@material-ui/core';
 import { BORDER_RADIUS } from 'config';
 import { formatUnits, toFixed } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
+import { useStats } from 'contexts/stats';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -28,13 +29,9 @@ const useStyles = makeStyles(theme => ({
 
 export default function() {
   const classes = useStyles();
-
   const { address, stakingContract, dittoDecimals, cakeDecimals } = useWallet();
+  const { apy } = useStats();
 
-  const [apy, setAPY] = React.useState(ethers.BigNumber.from('0'));
-  const [rewardMultiplier, setRewardMultiplier] = React.useState(
-    ethers.BigNumber.from('1')
-  );
   const [availableDittoRewards, setAvailableDittoRewards] = React.useState(
     ethers.BigNumber.from('0')
   );
@@ -49,10 +46,11 @@ export default function() {
     ]);
     setAvailableCakeRewards(availableCakeRewards);
     setAvailableDittoRewards(availableCakeRewards);
-
-    setAPY(ethers.BigNumber.from('35484'));
-    setRewardMultiplier(ethers.BigNumber.from('1'));
   };
+
+  React.useEffect(() => {
+    loadStats();
+  }, [stakingContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = React.useMemo(
     () => [
@@ -62,7 +60,7 @@ export default function() {
       },
       {
         name: 'Reward Multiplier',
-        value: [`${toFixed(rewardMultiplier, 1, 1)}x`],
+        value: ['1.0x'],
       },
       {
         name: 'Rewards Earned',
@@ -84,17 +82,12 @@ export default function() {
     ],
     [
       apy,
-      rewardMultiplier,
       availableDittoRewards,
       availableCakeRewards,
       dittoDecimals,
       cakeDecimals,
     ]
   );
-
-  React.useEffect(() => {
-    loadStats();
-  }, [stakingContract]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Box className={clsx(classes.container)}>

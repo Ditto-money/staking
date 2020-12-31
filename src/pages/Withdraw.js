@@ -65,15 +65,18 @@ export default function() {
   );
 
   const { showTxNotification, showErrorNotification } = useNotifications();
-  const [amountInput, setAmountInput] = React.useState(0);
+  const [inputAmount, setInputAmount] = React.useState(0);
   const [withdrawMaxAmount, setWithdrawMaxAmount] = React.useState(false);
-  const amount = React.useMemo(() => {
-    try {
-      return ethers.utils.parseUnits(amountInput.toString(), lpDecimals);
-    } catch {
-      return ethers.BigNumber.from('0');
-    }
-  }, [amountInput, lpDecimals]);
+  const [maxWithdrawAmount, setMaxWithdrawAmount] = React.useState(
+    ethers.BigNumber.from('0')
+  );
+  const withdrawAmount = React.useMemo(() => {
+    const inputAmountBN = ethers.utils.parseUnits(
+      inputAmount.toString(),
+      lpDecimals
+    );
+    return withdrawMaxAmount ? maxWithdrawAmount : inputAmountBN;
+  }, [inputAmount, maxWithdrawAmount, withdrawMaxAmount, lpDecimals]);
 
   const onConnectOrWithdraw = async () => {
     !signer ? startConnectingWallet() : withdraw();
@@ -81,8 +84,6 @@ export default function() {
 
   const withdraw = async () => {
     try {
-      const maxWithdrawAmount = await stakingContract.totalStakedFor(address);
-      const withdrawAmount = withdrawMaxAmount ? maxWithdrawAmount : amount;
       if (withdrawAmount.isZero())
         return showErrorNotification('Enter withdrawal amount.');
       if (!withdrawMaxAmount && withdrawAmount.gt(maxWithdrawAmount)) {
@@ -105,15 +106,16 @@ export default function() {
 
   const onSetWithdrawAmount = e => {
     setWithdrawMaxAmount(false);
-    setAmountInput(e.target.value);
+    setInputAmount(e.target.value);
   };
 
   const onSetWithdrawMaxAmount = async () => {
     if (!(stakingContract && address)) return;
     const totalStakedFor = await stakingContract.totalStakedFor(address);
     setTotalStakedFor(totalStakedFor);
-    setAmountInput(formatUnits(totalStakedFor, 18));
+    setInputAmount(formatUnits(totalStakedFor, 18));
     setWithdrawMaxAmount(true);
+    setMaxWithdrawAmount(totalStakedFor);
   };
 
   React.useEffect(() => {
@@ -126,7 +128,7 @@ export default function() {
         <div className={'flex'}>
           <TextField
             id="amount"
-            value={amountInput}
+            value={inputAmount}
             label={
               <div className="flex flex-grow justify-space">
                 <div className="flex-grow">Withdraw Amount ({lpName})</div>

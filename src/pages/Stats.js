@@ -1,12 +1,11 @@
 import React from 'react';
-import * as ethers from 'ethers';
 import clsx from 'clsx';
 import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Paper } from '@material-ui/core';
 import { BORDER_RADIUS } from 'config';
 import { toFixed } from 'utils/big-number';
-import { useWallet } from 'contexts/wallet';
+import { useStats } from 'contexts/stats';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -31,22 +30,7 @@ const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
 
-  const { stakingContract } = useWallet();
-
-  const [totalDeposits, setTotalDeposits] = React.useState(
-    ethers.BigNumber.from('0')
-  );
-  const [programDuration, setProgramDuration] = React.useState(0);
-
-  const loadStats = async () => {
-    if (!stakingContract) return;
-    setTotalDeposits(await stakingContract.totalLocked());
-    try {
-      setProgramDuration(
-        (await stakingContract.unlockSchedules(0)).endAtSec.toNumber()
-      );
-    } catch {}
-  };
+  const { totalDeposits, programDuration } = useStats();
 
   const stats = React.useMemo(
     () => [
@@ -62,10 +46,6 @@ export default function() {
     ],
     [totalDeposits, programDuration]
   );
-
-  React.useEffect(() => {
-    loadStats();
-  }, [stakingContract]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <Box className={clsx(classes.container)}>

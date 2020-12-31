@@ -188,15 +188,18 @@ function Deposit() {
   // const [monthlyCakeRewards] = React.useState(ethers.BigNumber.from('0'));
 
   const { showTxNotification, showErrorNotification } = useNotifications();
-  const [amountInput, setAmountInput] = React.useState(0);
+  const [inputAmount, setInputAmount] = React.useState(0);
   const [depositMaxAmount, setDepositMaxAmount] = React.useState(false);
-  const amount = React.useMemo(() => {
-    try {
-      return ethers.utils.parseUnits(amountInput.toString(), lpDecimals);
-    } catch {
-      return ethers.BigNumber.from('0');
-    }
-  }, [amountInput, lpDecimals]);
+  const [maxDepositAmount, setMaxDepositAmount] = React.useState(
+    ethers.BigNumber.from('0')
+  );
+  const depositAmount = React.useMemo(() => {
+    const inputAmountBN = ethers.utils.parseUnits(
+      inputAmount.toString(),
+      lpDecimals
+    );
+    return depositMaxAmount ? maxDepositAmount : inputAmountBN;
+  }, [inputAmount, maxDepositAmount, depositMaxAmount, lpDecimals]);
 
   const onConnectOrApproveOrDeposit = async () => {
     if (!signer) {
@@ -208,7 +211,7 @@ function Deposit() {
   const approve = async () => {
     try {
       setIsApproving(true);
-      const tx = await lpContract.approve(STAKING_ADDRESS, amount);
+      const tx = await lpContract.approve(STAKING_ADDRESS, depositAmount);
       showTxNotification(`Approving ${lpName}`, tx.hash);
       await tx.wait();
       showTxNotification(`Approved ${lpName}`, tx.hash);
@@ -222,8 +225,6 @@ function Deposit() {
 
   const deposit = async () => {
     try {
-      const maxDepositAmount = await lpContract.balanceOf(address);
-      const depositAmount = depositMaxAmount ? maxDepositAmount : amount;
       if (depositAmount.isZero())
         return showErrorNotification('Enter deposit amount.');
       if (!depositMaxAmount && depositAmount.gt(maxDepositAmount)) {
@@ -245,27 +246,27 @@ function Deposit() {
   };
 
   const checkAllowance = async () => {
-    if (!(lpContract && address && amount)) return setIsApproved(true);
+    if (!(lpContract && address)) return setIsApproved(true);
     const allowance = await lpContract.allowance(address, STAKING_ADDRESS);
-    setIsApproved(allowance.gte(amount));
+    setIsApproved(allowance.gte(depositAmount));
   };
 
   const onSetDepositAmount = e => {
     setDepositMaxAmount(false);
-    setAmountInput(e.target.value);
+    setInputAmount(e.target.value);
   };
 
   const onSetDepositMaxAmount = async () => {
     if (!(lpContract && address)) return;
-    setAmountInput(
-      formatUnits(await lpContract.balanceOf(address), lpDecimals)
-    );
+    const depositAmount = await lpContract.balanceOf(address);
+    setInputAmount(formatUnits(depositAmount, lpDecimals));
     setDepositMaxAmount(true);
+    setMaxDepositAmount(depositAmount);
   };
 
   React.useEffect(() => {
     checkAllowance();
-  }, [lpContract, address, amount]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lpContract, address, depositAmount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   React.useEffect(() => {
     onSetDepositMaxAmount();
@@ -277,7 +278,7 @@ function Deposit() {
         <div className={'flex'}>
           <TextField
             id="amount"
-            value={amountInput}
+            value={inputAmount}
             label={
               <div className="flex flex-grow justify-space">
                 <div className="flex-grow">Deposit Amount ({lpName})</div>

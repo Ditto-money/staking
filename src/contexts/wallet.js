@@ -35,6 +35,8 @@ export function WalletProvider({ children }) {
   const [dittoAddress, setDittoAddress] = React.useState(null);
   const [dittoDecimals] = React.useState(9);
 
+  const [wrappedBNBDecimals] = React.useState(9);
+
   const [signer, setSigner] = React.useState(null);
   const [address, setAddress] = React.useState(null);
 
@@ -52,16 +54,27 @@ export function WalletProvider({ children }) {
   );
 
   const lpContract = React.useMemo(
-    () => signer && lpAddress && new ethers.Contract(lpAddress, LP_ABI, signer),
+    () =>
+      lpAddress &&
+      new ethers.Contract(lpAddress, LP_ABI, signer || READ_PROVIDER),
     [signer, lpAddress]
   );
 
   const dittoContract = React.useMemo(
     () =>
-      signer &&
       dittoAddress &&
-      new ethers.Contract(dittoAddress, ERC20_ABI, signer),
+      new ethers.Contract(dittoAddress, ERC20_ABI, signer || READ_PROVIDER),
     [signer, dittoAddress]
+  );
+
+  const wrappedBNBContract = React.useMemo(
+    () =>
+      new ethers.Contract(
+        '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+        ERC20_ABI,
+        signer || READ_PROVIDER
+      ),
+    [signer]
   );
 
   const startConnecting = () => setIsConnecting(true);
@@ -187,6 +200,9 @@ export function WalletProvider({ children }) {
 
         stakingContract,
 
+        wrappedBNBContract,
+        wrappedBNBDecimals,
+
         isConnecting,
         startConnecting,
         stopConnecting,
@@ -231,6 +247,9 @@ export function useWallet() {
 
     stakingContract,
 
+    wrappedBNBContract,
+    wrappedBNBDecimals,
+
     isConnecting,
     startConnecting,
     stopConnecting,
@@ -264,6 +283,9 @@ export function useWallet() {
     cakeDecimals,
 
     stakingContract,
+
+    wrappedBNBContract,
+    wrappedBNBDecimals,
 
     isConnecting,
     startConnecting,
