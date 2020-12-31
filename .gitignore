@@ -10,6 +10,7 @@
 
 # production
 /build
+/build-swap
 
 # misc
 .DS_Store

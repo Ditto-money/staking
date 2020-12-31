@@ -4,6 +4,8 @@ run: node_modules
 prd:
 	@git pull
 	@yarn build
+	@rm -rf build-swap
+	@mv build build-swap
 
 node_modules:
 	@yarn

@@ -96,6 +96,7 @@ export function WalletProvider({ children }) {
 
   async function connectTrust() {
     await window.ethereum.enable();
+    if (!window.ethereum.isTrust) return;
     cache(CACHE_WALLET_KEY, 'trust');
     await setProvider(window.ethereum);
   }
@@ -111,9 +112,13 @@ export function WalletProvider({ children }) {
     //   disconnect();
     // });
     const provider = new ethers.providers.Web3Provider(web3Provider);
-    const net = await provider.getNetwork();
-    setChainId(net.chainId);
-    if (net.chainId === NETWORK_CHAIN_ID) {
+    let { chainId: c } = await provider.getNetwork();
+    // android trust wallet bug
+    [56, 97].forEach(o => {
+      if (parseInt(`0x${o}`, 16) === parseInt(c)) c = o;
+    });
+    setChainId(c);
+    if (c === NETWORK_CHAIN_ID) {
       const signer = provider.getSigner();
       setSigner(signer);
       setAddress(await signer.getAddress());
@@ -162,6 +167,7 @@ export function WalletProvider({ children }) {
       value={{
         isLoaded,
 
+        chainId,
         signer,
         address,
         isOnWrongNetwork,
@@ -204,6 +210,7 @@ export function useWallet() {
   const {
     isLoaded,
 
+    chainId,
     signer,
     address,
     config,
@@ -237,6 +244,7 @@ export function useWallet() {
   return {
     isLoaded,
 
+    chainId,
     signer,
     address,
     config,

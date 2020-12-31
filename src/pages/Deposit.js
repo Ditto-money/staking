@@ -68,8 +68,8 @@ export default withRouter(function() {
 
       <Box mx={5} mb={4}>
         <Switch>
-          <Route path={'/deposit/2'} component={Deposit} />
-          <Route path={'/deposit/1'} component={GetLPTokens} />
+          <Route exact path={'/deposit/2'} component={Deposit} />
+          <Route exact path={'/deposit/1'} component={GetLPTokens} />
           <Redirect to={'/deposit/1'} />
         </Switch>
       </Box>
