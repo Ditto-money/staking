@@ -29,12 +29,12 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-function Component() {
+export default withRouter(function() {
   const classes = useStyles();
   const path = window.location.hash;
-  const isDeposit = '#/deposit' === path;
-  const isWithdraw = '#/withdraw' === path;
-  const isStats = '#/stats' === path;
+  const isDeposit = ~path.indexOf('deposit');
+  const isWithdraw = ~path.indexOf('withdraw');
+  const isStats = ~path.indexOf('stats');
 
   return (
     <div className={clsx('flex flex-col flex-grow', classes.container)}>
@@ -67,6 +67,4 @@ function Component() {
       </div>
     </div>
   );
-}
-
-export default withRouter(Component);
+});

@@ -48,8 +48,8 @@ export default function App() {
           <div className={classes.tabContent}>
             <Switch>
               <Route path={'/deposit'} component={Deposit} />
-              <Route path={'/withdraw'} component={Withdraw} />
-              <Route path={'/stats'} component={Stats} />
+              <Route exact path={'/withdraw'} component={Withdraw} />
+              <Route exact path={'/stats'} component={Stats} />
               <Redirect to={'/stats'} />
             </Switch>
           </div>

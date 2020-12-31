@@ -68,7 +68,7 @@ function ERC20({ header, tokenAddress }) {
 
   const onBalanceChange = async (from, to) => {
     if (from === address || to === address) {
-      await sleep(1000);
+      await sleep(500);
       setBalance(await contract.balanceOf(address));
     }
   };
