@@ -180,9 +180,11 @@ export function StatsProvider({ children }) {
     const unstakedEvent = stakingContract.filters.Unstaked();
     stakingContract.on(stakedEvent, loadUserStats);
     stakingContract.on(unstakedEvent, loadUserStats);
+    const cid = setInterval(loadUserStats, 1000 * 60);
     return () => {
       stakingContract.off(stakedEvent, loadUserStats);
       stakingContract.off(unstakedEvent, loadUserStats);
+      clearInterval(cid);
     };
   };
 
