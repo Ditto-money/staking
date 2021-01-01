@@ -23,6 +23,7 @@ const useStyles = makeStyles(theme => ({
     borderBottom: '5px solid #555',
     textDecoration: 'none',
     padding: '5px 0 15px',
+    cursor: 'pointer',
   },
   active: {
     borderBottomColor: theme.palette.secondary.main,

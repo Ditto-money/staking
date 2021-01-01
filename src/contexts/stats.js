@@ -21,53 +21,59 @@ export function StatsProvider({ children }) {
     address,
   } = useWallet();
 
-  const [apy, setAPY] = React.useState(Big('0'));
-  const [monthlyUnlockRate, setMonthlyUnlockRate] = React.useState(Big('0'));
-  const [totalDeposits, setTotalDeposits] = React.useState(Big('0'));
-  const [stakingEndSec, setProgramDuration] = React.useState(0);
+  // pool
+
+  const [totalStaked, setTotalStaked] = React.useState(Big('0'));
+  const [totalLockedShares, setTotalLockedShares] = React.useState(Big('0'));
+  const [unlockScheduleCount, setUnlockScheduleCount] = React.useState(
+    Big('0')
+  );
+  const [totalStakingShares, setTotalStakingShares] = React.useState(Big('0'));
+  const [totalLocked, setTotalLocked] = React.useState(Big('0'));
+  const [totalSupply, setTotalSupply] = React.useState(Big('0'));
+  const [poolBNBBalance, setPoolBNBBalance] = React.useState(Big('0'));
+  const [poolDittoBalance, setPoolDittoBalance] = React.useState(Big('0'));
+  const [schedules, setUnlockSchedules] = React.useState([]);
+  const [bnbUSDPrice, setBNBUSDPrice] = React.useState(Big('0'));
+  const [dittoUSDPrice, setDittoUSDPrice] = React.useState(Big('0'));
+
+  // user
+
   const [availableDittoRewards, setAvailableDittoRewards] = React.useState(
     Big('0')
   );
   const [availableCakeRewards, setAvailableCakeRewards] = React.useState(
     Big('0')
   );
-
-  const [totalStakingShares, setTotalStakingShares] = React.useState(Big('0'));
-  const [totalStaked, setTotalStaked] = React.useState(Big('0'));
+  const [totalStakedFor, setTotalStakedFor] = React.useState(Big('0'));
   const [
     totalStakingShareSeconds,
     setTotalStakingShareSeconds,
   ] = React.useState(Big('0'));
-  const [totalStakedFor, setTotalStakedFor] = React.useState(Big('0'));
   const [userStakingShareSeconds, setUserStakingShareSeconds] = React.useState(
     Big('0')
   );
 
-  const loadPoolStats = async () => {
+  const [time, setTime] = React.useState(0);
+
+  const totalUSDDeposits = React.useMemo(() => {
     if (
       !(
-        stakingContract &&
-        lpContract &&
-        wrappedBNBContract &&
-        dittoContract &&
-        lpAddress
+        !isZero(totalStaked) &&
+        !isZero(totalSupply) &&
+        !isZero(poolBNBBalance) &&
+        !isZero(poolDittoBalance) &&
+        !isZero(bnbUSDPrice) &&
+        !isZero(dittoUSDPrice) &&
+        dittoDecimals &&
+        lpDecimals &&
+        wrappedBNBDecimals
       )
     )
-      return;
-    const v = await Promise.all([
-      0, // stakingContract.updateAccounting(), // 0
-      stakingContract.totalStaked(), // 1
-      stakingContract.totalLockedShares(), // 2
-      stakingContract.unlockScheduleCount(), // 3
-      stakingContract.totalStakingShares(), // 4
-      0, // i.methods.totalSupply(), // 5
-      lpContract.totalSupply(), // 6
-      wrappedBNBContract.balanceOf(lpAddress), // 7
-      dittoContract.balanceOf(lpAddress), // 8
-    ]);
+      return Big('0');
 
-    setTotalStakingShares(Big(v[4]));
-    setTotalStaked(Big(v[1]));
+    const k = bnbUSDPrice;
+    const A = dittoUSDPrice;
 
     // const l = 18;
     const c = lpDecimals; // lp
@@ -77,18 +83,17 @@ export function StatsProvider({ children }) {
     // const g = parseInt(v[0][0]) / 10 ** l;
     // const y = parseInt(v[0][1]) / 10 ** l;
     // const b = parseInt(v[0][5]);
-    const w = Big(v[1]).div(10 ** c);
-    // const _ = parseInt(v[2]);
-    // const x = parseInt(v[3]);
+    const w = Big(totalStaked).div(10 ** c);
+    // const _ = parseInt(totalLockedShares);
+    // const x = parseInt(unlockScheduleCount);
     // const S = parseInt(v[5]) / 10 ** l;
-    const E = Big(v[6]).div(10 ** c);
+    const E = Big(totalSupply).div(10 ** c);
     // const M = yield up(h)
     // const k = yield up(f)
     // const A = yield up(d)
-    const T = Big(v[7]).div(10 ** p);
-    const C = Big(v[8]).div(10 ** m);
+    const T = Big(poolBNBBalance).div(10 ** p);
+    const C = Big(poolDittoBalance).div(10 ** m);
 
-    const [k, A] = await getCoinUsdPrices(['wbnb', 'ditto']);
     const O = k.mul(T);
     const P = A.mul(C);
 
@@ -102,14 +107,101 @@ export function StatsProvider({ children }) {
     //   }, {})
     // );
 
-    // console.log('deposits', N.toString());
-    setTotalDeposits(Big(N));
+    return N;
+  }, [
+    totalStaked,
+    totalSupply,
+    poolBNBBalance,
+    poolDittoBalance,
+    bnbUSDPrice,
+    dittoUSDPrice,
+    dittoDecimals,
+    lpDecimals,
+    wrappedBNBDecimals,
+  ]);
 
-    const noOfSchedules = await stakingContract.unlockScheduleCount();
-    // const noOfSchedules = ethers.BigNumber.from('1');
+  const stakingEndSec = React.useMemo(
+    () =>
+      !schedules.length ? Big('0') : schedules[schedules.length - 1].endAtSec,
+    [schedules]
+  );
+
+  const monthlyUnlockRate = React.useMemo(() => {
+    if (!(!isZero(totalLockedShares) && !isZero(totalLocked) && schedules))
+      return Big('0');
+
+    const s = totalLockedShares.div(1e18);
+    const a = totalLocked;
+    const m = parseInt(time / 1e3);
+    const i = Big((60 * 60 * 24 * 30).toString()); // 2592e3
+
+    const ip = (t, e) => (t.gte(e) ? t : e);
+    const op = (t, e) => (t.lte(e) ? t : e);
+
+    const vaa = schedules.reduce((t, schedule) => {
+      return t.add(
+        op(ip(schedule.endAtSec.sub(m), Big('0')), i)
+          .div(schedule.durationSec)
+          .mul(schedule.initialLockedShares)
+      );
+    }, Big('0'));
+
+    return isZero(a) ? Big('0') : vaa.div(a).mul(s);
+  }, [totalLockedShares, totalLocked, schedules, time]);
+
+  const apy = React.useMemo(() => {
+    if (!(!isZero(monthlyUnlockRate), !isZero(totalUSDDeposits)))
+      return Big('0');
+
+    let apy = monthlyUnlockRate
+      .add(CAKE_APY.div(12))
+      .div(totalUSDDeposits)
+      .mul(12);
+
+    if (apy.gte(1e6)) {
+      apy = Big(1e6);
+    }
+
+    return apy;
+  }, [monthlyUnlockRate, totalUSDDeposits]);
+
+  const loadPoolStats = async () => {
+    if (
+      !(
+        stakingContract &&
+        lpContract &&
+        wrappedBNBContract &&
+        dittoContract &&
+        lpAddress
+      )
+    )
+      return;
+    const [
+      totalStaked,
+      totalLockedShares,
+      unlockScheduleCount,
+      totalStakingShares,
+      totalLocked,
+      noOfSchedules,
+      totalSupply,
+      poolBNBBalance,
+      poolDittoBalance,
+      [bnbUSDPrice, dittoUSDPrice],
+    ] = await Promise.all([
+      stakingContract.totalStaked(),
+      stakingContract.totalLockedShares(),
+      stakingContract.unlockScheduleCount(),
+      stakingContract.totalStakingShares(),
+      stakingContract.totalLocked(),
+      stakingContract.unlockScheduleCount(),
+      lpContract.totalSupply(),
+      wrappedBNBContract.balanceOf(lpAddress),
+      dittoContract.balanceOf(lpAddress),
+      getCoinUsdPrices(['wbnb', 'ditto']),
+    ]);
+
+    const schedules = [];
     if (!noOfSchedules.isZero()) {
-      const schedules = [];
-
       for (let b = 0; b < noOfSchedules.toNumber(); b++) {
         const schedule = await stakingContract.unlockSchedules(
           noOfSchedules.sub(1).toNumber()
@@ -122,70 +214,19 @@ export function StatsProvider({ children }) {
           durationSec: Big(schedule.durationSec),
         });
       }
-
-      setProgramDuration(schedules[schedules.length - 1].endAtSec);
-
-      const sa = await Promise.all([
-        stakingContract.totalLockedShares(),
-        stakingContract.totalLocked(),
-      ]);
-      const s = Big(sa[0]).div(1e18);
-      const a = Big(sa[1]);
-      const m = parseInt(Date.now() / 1e3);
-      const i = Big((60 * 60 * 24 * 30).toString()); // 2592e3
-
-      const ip = (t, e) => (t.gte(e) ? t : e);
-      const op = (t, e) => (t.lte(e) ? t : e);
-
-      const vaa = schedules.reduce((t, schedule) => {
-        return t.add(
-          op(ip(schedule.endAtSec.sub(m), Big('0')), i)
-            .div(schedule.durationSec)
-            .mul(schedule.initialLockedShares)
-        );
-      }, Big('0'));
-
-      const monthlyUnlockRate = isZero(a) ? Big('0') : vaa.div(a).mul(s);
-
-      let apy = monthlyUnlockRate
-        .add(CAKE_APY.div(12))
-        .div(N)
-        .mul(12);
-      // console.log(vaa.toString(), a.toString(), s.toString());
-      if (apy.gte(1e6)) {
-        apy = Big(1e6);
-      }
-
-      // console.log('apy', apy.toString());
-      setMonthlyUnlockRate(Big(monthlyUnlockRate));
-      setAPY(Big(apy));
     }
-  };
 
-  const subscribeToPoolStats = () => {
-    if (!stakingContract) return;
-    const stakedEvent = stakingContract.filters.Staked();
-    const unstakedEvent = stakingContract.filters.Unstaked();
-    stakingContract.on(stakedEvent, loadPoolStats);
-    stakingContract.on(unstakedEvent, loadPoolStats);
-    return () => {
-      stakingContract.off(stakedEvent, loadPoolStats);
-      stakingContract.off(unstakedEvent, loadPoolStats);
-    };
-  };
-
-  const subscribeToUserStats = () => {
-    if (!(stakingContract && address)) return;
-    const stakedEvent = stakingContract.filters.Staked();
-    const unstakedEvent = stakingContract.filters.Unstaked();
-    stakingContract.on(stakedEvent, loadUserStats);
-    stakingContract.on(unstakedEvent, loadUserStats);
-    const cid = setInterval(loadUserStats, 1000 * 60);
-    return () => {
-      stakingContract.off(stakedEvent, loadUserStats);
-      stakingContract.off(unstakedEvent, loadUserStats);
-      clearInterval(cid);
-    };
+    setTotalStaked(Big(totalStaked));
+    setTotalLockedShares(Big(totalLockedShares));
+    setUnlockScheduleCount(Big(unlockScheduleCount));
+    setTotalStakingShares(Big(totalStakingShares));
+    setTotalLocked(Big(totalLocked));
+    setTotalSupply(Big(totalSupply));
+    setPoolBNBBalance(Big(poolBNBBalance));
+    setPoolDittoBalance(Big(poolDittoBalance));
+    setBNBUSDPrice(Big(bnbUSDPrice));
+    setDittoUSDPrice(Big(dittoUSDPrice));
+    setUnlockSchedules(schedules);
   };
 
   const loadUserStats = async () => {
@@ -209,6 +250,39 @@ export function StatsProvider({ children }) {
     setUserStakingShareSeconds(Big(userStakingShareSeconds));
   };
 
+  const subscribeToPoolStats = () => {
+    if (!stakingContract) return;
+    const stakedEvent = stakingContract.filters.Staked();
+    const unstakedEvent = stakingContract.filters.Unstaked();
+    stakingContract.on(stakedEvent, loadPoolStats);
+    stakingContract.on(unstakedEvent, loadPoolStats);
+    return () => {
+      stakingContract.off(stakedEvent, loadPoolStats);
+      stakingContract.off(unstakedEvent, loadPoolStats);
+    };
+  };
+
+  const subscribeToUserStats = () => {
+    if (!(stakingContract && address)) return;
+    const stakedEvent = stakingContract.filters.Staked();
+    const unstakedEvent = stakingContract.filters.Unstaked();
+    stakingContract.on(stakedEvent, loadUserStats);
+    stakingContract.on(unstakedEvent, loadUserStats);
+    const cid = setInterval(loadUserStats, 1000 * 30);
+    return () => {
+      stakingContract.off(stakedEvent, loadUserStats);
+      stakingContract.off(unstakedEvent, loadUserStats);
+      clearInterval(cid);
+    };
+  };
+
+  const subscribeToTime = () => {
+    const cid = setInterval(() => setTime(Date.now()), 1000);
+    return () => {
+      clearInterval(cid);
+    };
+  };
+
   React.useEffect(() => {
     loadPoolStats();
     return subscribeToPoolStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -228,21 +302,35 @@ export function StatsProvider({ children }) {
     return subscribeToUserStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stakingContract, address]);
 
+  React.useEffect(() => {
+    return subscribeToTime(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <StatsContext.Provider
       value={{
-        apy,
-        monthlyUnlockRate,
-        totalDeposits,
-        stakingEndSec,
+        totalStaked,
+        totalLockedShares,
+        unlockScheduleCount,
+        totalStakingShares,
+        totalLocked,
+        totalSupply,
+        poolBNBBalance,
+        poolDittoBalance,
+        bnbUSDPrice,
+        dittoUSDPrice,
+        schedules,
+
         availableDittoRewards,
         availableCakeRewards,
-
-        totalStakingShares,
-        totalStaked,
-        totalStakingShareSeconds,
         totalStakedFor,
+        totalStakingShareSeconds,
         userStakingShareSeconds,
+
+        apy,
+        monthlyUnlockRate,
+        totalUSDDeposits,
+        stakingEndSec,
       }}
     >
       {children}
@@ -256,33 +344,53 @@ export function useStats() {
     throw new Error('Missing stats context');
   }
   const {
-    apy,
-    monthlyUnlockRate,
-    totalDeposits,
-    stakingEndSec,
+    totalStaked,
+    totalLockedShares,
+    unlockScheduleCount,
+    totalStakingShares,
+    totalLocked,
+    totalSupply,
+    poolBNBBalance,
+    poolDittoBalance,
+    schedules,
+    bnbUSDPrice,
+    dittoUSDPrice,
+
     availableDittoRewards,
     availableCakeRewards,
-
-    totalStakingShares,
-    totalStaked,
-    totalStakingShareSeconds,
     totalStakedFor,
+    totalStakingShareSeconds,
     userStakingShareSeconds,
+
+    apy,
+    monthlyUnlockRate,
+    totalUSDDeposits,
+    stakingEndSec,
   } = context;
 
   return {
-    apy,
-    monthlyUnlockRate,
-    totalDeposits,
-    stakingEndSec,
+    totalStaked,
+    totalLockedShares,
+    unlockScheduleCount,
+    totalStakingShares,
+    totalLocked,
+    totalSupply,
+    poolBNBBalance,
+    poolDittoBalance,
+    schedules,
+    bnbUSDPrice,
+    dittoUSDPrice,
+
     availableDittoRewards,
     availableCakeRewards,
-
-    totalStakingShares,
-    totalStaked,
-    totalStakingShareSeconds,
     totalStakedFor,
+    totalStakingShareSeconds,
     userStakingShareSeconds,
+
+    apy,
+    monthlyUnlockRate,
+    totalUSDDeposits,
+    stakingEndSec,
   };
 }
 

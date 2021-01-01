@@ -4,7 +4,7 @@ import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Paper } from '@material-ui/core';
 import { BORDER_RADIUS } from 'config';
-import { toFixed } from 'utils/big-number';
+import { toFixed, isZero } from 'utils/big-number';
 import { useStats } from 'contexts/stats';
 
 const useStyles = makeStyles(theme => ({
@@ -30,13 +30,13 @@ const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
 
-  const { totalDeposits, stakingEndSec } = useStats();
+  const { totalUSDDeposits, stakingEndSec } = useStats();
 
   const stats = React.useMemo(
     () => [
       {
         name: 'Total Deposits',
-        value: [`${toFixed(totalDeposits, 1, 2)} USD`],
+        value: [`${toFixed(totalUSDDeposits, 1, 2)} USD`],
       },
 
       {
@@ -44,7 +44,7 @@ export default function() {
         value: [<Countdown to={stakingEndSec} />],
       },
     ],
-    [totalDeposits, stakingEndSec]
+    [totalUSDDeposits, stakingEndSec]
   );
 
   return (
@@ -75,7 +75,7 @@ function Countdown({ to }) {
   const [duration, setDuration] = React.useState('-');
 
   React.useEffect(() => {
-    if (!to) return;
+    if (isZero(to)) return;
     const id = setInterval(() => {
       setDuration(`${moment.unix(to).from(moment.utc(), true)} left`);
     }, 1000);
