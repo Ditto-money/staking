@@ -54,8 +54,6 @@ export function StatsProvider({ children }) {
     Big('0')
   );
 
-  const [time, setTime] = React.useState(0);
-
   const totalUSDDeposits = React.useMemo(() => {
     if (
       !(
@@ -132,7 +130,7 @@ export function StatsProvider({ children }) {
 
     const s = totalLockedShares.div(1e18);
     const a = totalLocked;
-    const m = parseInt(time / 1e3);
+    const m = parseInt(Date.now() / 1e3);
     const i = Big((60 * 60 * 24 * 30).toString()); // 2592e3
 
     const ip = (t, e) => (t.gte(e) ? t : e);
@@ -147,7 +145,7 @@ export function StatsProvider({ children }) {
     }, Big('0'));
 
     return isZero(a) ? Big('0') : vaa.div(a).mul(s);
-  }, [totalLockedShares, totalLocked, schedules, time]);
+  }, [totalLockedShares, totalLocked, schedules]);
 
   const apy = React.useMemo(() => {
     if (!(!isZero(monthlyUnlockRate), !isZero(totalUSDDeposits)))
@@ -276,13 +274,6 @@ export function StatsProvider({ children }) {
     };
   };
 
-  const subscribeToTime = () => {
-    const cid = setInterval(() => setTime(Date.now()), 1000);
-    return () => {
-      clearInterval(cid);
-    };
-  };
-
   React.useEffect(() => {
     loadPoolStats();
     return subscribeToPoolStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -301,10 +292,6 @@ export function StatsProvider({ children }) {
     loadUserStats();
     return subscribeToUserStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stakingContract, address]);
-
-  React.useEffect(() => {
-    return subscribeToTime(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   return (
     <StatsContext.Provider

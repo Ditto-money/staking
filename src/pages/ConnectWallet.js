@@ -111,7 +111,7 @@ export default function() {
               <span className={classes.net}>{NETWORK_NAME}</span>
             </strong>
             <div>or</div>
-            <div className="cursor-pointer" onClick={() => wallet.disconnect}>
+            <div className="cursor-pointer" onClick={wallet.disconnect}>
               disconnect
             </div>
           </Box>
