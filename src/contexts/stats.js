@@ -145,14 +145,12 @@ export function StatsProvider({ children }) {
         );
       }, Big('0'));
 
-      const monthlyUnlockRate = isZero(a)
-        ? Big('0')
-        : vaa
-            .div(a)
-            .mul(s)
-            .add(CAKE_APY.div(12));
+      const monthlyUnlockRate = isZero(a) ? Big('0') : vaa.div(a).mul(s);
 
-      let apy = monthlyUnlockRate.div(N).mul(12);
+      let apy = monthlyUnlockRate
+        .add(CAKE_APY.div(12))
+        .div(N)
+        .mul(12);
       // console.log(vaa.toString(), a.toString(), s.toString());
       if (apy.gte(1e6)) {
         apy = Big(1e6);
