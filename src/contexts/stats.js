@@ -4,6 +4,8 @@ import { Big, isZero } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
 import * as request from 'utils/request';
 
+const CAKE_APY = Big('115');
+
 const StatsContext = React.createContext(null);
 
 export function StatsProvider({ children }) {
@@ -124,17 +126,19 @@ export function StatsProvider({ children }) {
 
       setProgramDuration(schedules[schedules.length - 1].endAtSec);
 
-      const [s, a] = await Promise.all([
+      const sa = await Promise.all([
         stakingContract.totalLockedShares(),
         stakingContract.totalLocked(),
       ]);
-
+      const s = Big(sa[0]).div(1e18);
+      const a = Big(sa[1]);
+      const m = parseInt(Date.now() / 1e3);
       const i = Big((60 * 60 * 24 * 30).toString()); // 2592e3
 
       const ip = (t, e) => (t.gte(e) ? t : e);
       const op = (t, e) => (t.lte(e) ? t : e);
 
-      const hha = schedules.reduce((t, schedule) => {
+      const vaa = schedules.reduce((t, schedule) => {
         return t.add(
           op(ip(schedule.endAtSec.sub(m), Big('0')), i)
             .div(schedule.durationSec)
@@ -144,12 +148,13 @@ export function StatsProvider({ children }) {
 
       const monthlyUnlockRate = isZero(a)
         ? Big('0')
-        : hha
+        : vaa
             .div(a)
             .mul(s)
-            .div(N);
-      let apy = monthlyUnlockRate.mul(12);
-      console.log(monthlyUnlockRate.toString());
+            .add(CAKE_APY.div(12));
+
+      let apy = monthlyUnlockRate.div(N).mul(12);
+      // console.log(vaa.toString(), a.toString(), s.toString());
       if (apy.gte(1e6)) {
         apy = Big(1e6);
       }

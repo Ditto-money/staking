@@ -35,7 +35,7 @@ export default function() {
     () => [
       {
         name: 'APY',
-        value: [`${toFixed(apy, 100, 2)}%`],
+        value: [`${toFixed(apy, 1, 2)}%`],
       },
       {
         name: 'Reward Multiplier',

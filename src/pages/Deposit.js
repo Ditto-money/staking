@@ -16,7 +16,7 @@ import {
 import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
-import { formatUnits, Big, isZero } from 'utils/big-number';
+import { formatUnits, Big, isZero, toFixed } from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import sleep from 'utils/sleep';
@@ -323,6 +323,8 @@ function Deposit() {
     userStakingShareSeconds,
   ]);
 
+  // console.log(depositAmount.toString(), monthlyDittoRewards.toString());
+
   const onSetDepositAmount = event => {
     setDepositMaxAmount(false);
     setInputAmount(event.target.value);
@@ -386,7 +388,7 @@ function Deposit() {
       <Box mt={2}>
         <Paper className={clsx(classes.rewards)}>
           <div>Your Estimated Rewards:</div>
-          <div>{formatUnits(monthlyDittoRewards, 18)} DITTO / month plus,</div>
+          <div>{toFixed(monthlyDittoRewards, 1)} DITTO / month plus,</div>
           <div>CAKE depending on Pancakeswap emission.</div>
         </Paper>
       </Box>
