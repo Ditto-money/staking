@@ -94,7 +94,7 @@ export default function() {
         return showErrorNotification('Enter withdrawal amount.');
       if (!withdrawMaxAmount && withdrawAmount.gt(maxWithdrawAmount)) {
         return showErrorNotification(
-          'You are trying to withdrawing more than you deposited.'
+          'You are trying to withdraw more than you deposited.'
         );
       }
       setIsWithdrawing(true);
