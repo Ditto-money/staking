@@ -1,6 +1,7 @@
 import React from 'react';
 import * as ethers from 'ethers';
 import clsx from 'clsx';
+import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
 import {
@@ -188,6 +189,7 @@ function Deposit() {
     totalStakingShareSeconds,
     totalStakedFor,
     userStakingShareSeconds,
+    stakingEndSec,
   } = useStats();
 
   const [isApproving, setIsApproving] = React.useState(false);
@@ -267,52 +269,58 @@ function Deposit() {
     if (
       !(
         depositAmount &&
-        monthlyUnlockRate &&
-        totalStakingShares &&
-        totalStaked &&
+        !isZero(monthlyUnlockRate) &&
+        !isZero(totalStakingShares) &&
+        !isZero(totalStaked) &&
         totalStakingShareSeconds &&
         totalStakedFor &&
-        userStakingShareSeconds
+        userStakingShareSeconds &&
+        lpDecimals &&
+        stakingEndSec
       )
     )
       return Big('0');
+
+    const n = Big(depositAmount).div(10 ** lpDecimals);
+    if (isZero(n)) return Big('0');
+
     const r = 2592e3;
-    const n = Big(depositAmount);
     const t = {
       totalStakingShares,
-      totalStaked,
+      totalStaked: totalStaked.div(10 ** lpDecimals),
       totalStakingShareSeconds,
     };
     const e = {
-      totalStakedFor,
+      totalStakedFor: totalStakedFor.div(10 ** lpDecimals),
       userStakingShareSeconds,
     };
-    const i = isZero(t.totalStaked)
-      ? Big('0')
-      : e.totalStakedFor.mul(t.totalStakingShares).div(t.totalStaked);
-    const o = isZero(t.totalStaked)
-      ? Big('0')
-      : n.mul(t.totalStakingShares).div(t.totalStaked);
-    const b = t.totalStakingShareSeconds.add(
+    const i = e.totalStakedFor.mul(t.totalStakingShares).div(t.totalStaked);
+    const o = n.mul(t.totalStakingShares).div(t.totalStaked);
+    const a1 = e.userStakingShareSeconds.add(i.add(o).mul(r));
+    const a2 = t.totalStakingShareSeconds.add(
       t.totalStakingShares.add(o).mul(r)
     );
-    // console.log(
-    //   t.totalStaked.toString(),
-    //   n.toString(),
-    //   t.totalStakingShares.toString()
-    // );
-    // console.log(
-    //   monthlyUnlockRate.toString(),
-    //   'f',
-    //   i.toString(),
-    //   o.toString(),
-    //   b.toString()
-    // );
-    const a = isZero(b)
-      ? Big('0')
-      : e.userStakingShareSeconds.add(i.add(o).mul(r)).div(b);
+    const a = a1.div(a2);
 
-    return monthlyUnlockRate.mul(a);
+    // console.log(
+    //   Object.entries({
+    //     totalStakingShares: t.totalStakingShares,
+    //     totalStaked: t.totalStaked,
+    //     totalStakingShareSeconds: t.totalStakingShareSeconds,
+    //     totalStakedFor: e.totalStakedFor,
+    //     userStakingShareSeconds: e.userStakingShareSeconds,
+    //   }).reduce((r, [k, v]) => {
+    //     r[k] = v.toString();
+    //     return r;
+    //   }, {})
+    // );
+    // console.log(n.toString(), a.toString(), monthlyUnlockRate.toString());
+
+    let estimate = a.mul(monthlyUnlockRate).div(100);
+    if (moment.utc().isAfter(moment.unix(stakingEndSec))) {
+      estimate = estimate.mul(stakingEndSec).div(r);
+    }
+    return estimate;
   }, [
     depositAmount,
     monthlyUnlockRate,
@@ -321,9 +329,9 @@ function Deposit() {
     totalStakingShareSeconds,
     totalStakedFor,
     userStakingShareSeconds,
+    lpDecimals,
+    stakingEndSec,
   ]);
-
-  // console.log(depositAmount.toString(), monthlyDittoRewards.toString());
 
   const onSetDepositAmount = event => {
     setDepositMaxAmount(false);
@@ -388,8 +396,8 @@ function Deposit() {
       <Box mt={2}>
         <Paper className={clsx(classes.rewards)}>
           <div>Your Estimated Rewards:</div>
-          <div>{toFixed(monthlyDittoRewards, 1)} DITTO / month plus,</div>
-          <div>CAKE depending on Pancakeswap emission.</div>
+          <div>{toFixed(monthlyDittoRewards, 1)} DITTO / month,</div>
+          <div>plus CAKE depending on Pancakeswap emission.</div>
         </Paper>
       </Box>
 

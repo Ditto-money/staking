@@ -30,7 +30,7 @@ const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
 
-  const { totalDeposits, programDuration } = useStats();
+  const { totalDeposits, stakingEndSec } = useStats();
 
   const stats = React.useMemo(
     () => [
@@ -41,10 +41,10 @@ export default function() {
 
       {
         name: 'Program duration',
-        value: [<Countdown to={programDuration} />],
+        value: [<Countdown to={stakingEndSec} />],
       },
     ],
-    [totalDeposits, programDuration]
+    [totalDeposits, stakingEndSec]
   );
 
   return (

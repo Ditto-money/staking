@@ -24,7 +24,7 @@ export function StatsProvider({ children }) {
   const [apy, setAPY] = React.useState(Big('0'));
   const [monthlyUnlockRate, setMonthlyUnlockRate] = React.useState(Big('0'));
   const [totalDeposits, setTotalDeposits] = React.useState(Big('0'));
-  const [programDuration, setProgramDuration] = React.useState(0);
+  const [stakingEndSec, setProgramDuration] = React.useState(0);
   const [availableDittoRewards, setAvailableDittoRewards] = React.useState(
     Big('0')
   );
@@ -68,7 +68,6 @@ export function StatsProvider({ children }) {
 
     setTotalStakingShares(Big(v[4]));
     setTotalStaked(Big(v[1]));
-    setUserStakingShareSeconds(Big(v[4])); // parseInt(totalStakingShares), parseInt(updateAccounting[2]))
 
     // const l = 18;
     const c = lpDecimals; // lp
@@ -180,31 +179,23 @@ export function StatsProvider({ children }) {
 
   const loadUserStats = async () => {
     if (!(stakingContract && address)) return;
-    const [availableCakeRewards, totalStakedFor] = await Promise.all([
+    const [
+      availableCakeRewards,
+      totalStakedFor,
+      [, userStakingShareSeconds, totalStakingShareSeconds],
+    ] = await Promise.all([
       stakingContract.pendingCakeByUser(address),
       stakingContract.totalStakedFor(address),
+      stakingContract.callStatic.updateAccounting(),
     ]);
+    const availableDittoRewards = await stakingContract.callStatic.unstakeQuery(
+      totalStakedFor
+    );
     setAvailableCakeRewards(Big(availableCakeRewards));
     setTotalStakedFor(Big(totalStakedFor));
-
-    setAvailableDittoRewards(
-      await stakingContract.callStatic.unstakeQuery(totalStakedFor)
-    );
-
-    // Promise.all([
-    //   totalLocked(),
-    //   totalUnlocked(),
-    //   totals.stakingShareSeconds,
-    // _totalStakingShareSeconds,
-    // totalUserRewards,
-    // now
-
-    const [
-      ,
-      ,
-      stakingShareSeconds,
-    ] = await stakingContract.callStatic.updateAccounting();
-    setTotalStakingShareSeconds(Big(stakingShareSeconds));
+    setAvailableDittoRewards(Big(availableDittoRewards));
+    setTotalStakingShareSeconds(Big(totalStakingShareSeconds));
+    setUserStakingShareSeconds(Big(userStakingShareSeconds));
   };
 
   React.useEffect(() => {
@@ -217,7 +208,7 @@ export function StatsProvider({ children }) {
         apy,
         monthlyUnlockRate,
         totalDeposits,
-        programDuration,
+        stakingEndSec,
         availableDittoRewards,
         availableCakeRewards,
 
@@ -242,7 +233,7 @@ export function useStats() {
     apy,
     monthlyUnlockRate,
     totalDeposits,
-    programDuration,
+    stakingEndSec,
     availableDittoRewards,
     availableCakeRewards,
 
@@ -257,7 +248,7 @@ export function useStats() {
     apy,
     monthlyUnlockRate,
     totalDeposits,
-    programDuration,
+    stakingEndSec,
     availableDittoRewards,
     availableCakeRewards,
 
