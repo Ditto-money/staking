@@ -53,6 +53,8 @@ export default function() {
     stakingContract,
     lpContract,
     lpDecimals,
+    dittoDecimals,
+    cakeDecimals,
     lpName,
   } = useWallet();
   const { availableDittoRewards, availableCakeRewards } = useStats();
@@ -169,14 +171,14 @@ export default function() {
         <Paper className={clsx(classes.rewards)}>
           <div>Amount to Withdraw:</div>
           <div>
-            {formatUnits(totalStakedFor, 18)} {lpName}
+            {formatUnits(totalStakedFor, lpDecimals)} {lpName}
           </div>
         </Paper>
 
         <Paper className={clsx(classes.rewards)}>
           <div>Rewards Earned:</div>
-          <div>{formatUnits(availableDittoRewards, 18)} DITTO</div>
-          <div>{formatUnits(availableCakeRewards, 18)} CAKE</div>
+          <div>{formatUnits(availableDittoRewards, dittoDecimals)} DITTO</div>
+          <div>{formatUnits(availableCakeRewards, cakeDecimals)} CAKE</div>
         </Paper>
       </Box>
 

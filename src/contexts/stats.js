@@ -2,6 +2,7 @@ import React from 'react';
 // import * as ethers from 'ethers';
 import { Big, isZero } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
+import * as request from 'utils/request';
 
 const StatsContext = React.createContext(null);
 
@@ -86,8 +87,7 @@ export function StatsProvider({ children }) {
     const T = Big(v[7]).div(10 ** p);
     const C = Big(v[8]).div(10 ** m);
 
-    const k = Big('37'); // price of BNB
-    const A = Big('1'); // price of Ditto
+    const [k, A] = await getCoinUsdPrices(['wbnb', 'ditto']);
     const O = k.mul(T);
     const P = A.mul(C);
 
@@ -107,15 +107,7 @@ export function StatsProvider({ children }) {
     const noOfSchedules = await stakingContract.unlockScheduleCount();
     // const noOfSchedules = ethers.BigNumber.from('1');
     if (!noOfSchedules.isZero()) {
-      const schedules = [
-        // {
-        //   initialLockedShares: Big('100000000000000000'),
-        //   unlockedShares: Big('100000000000000000'),
-        //   lastUnlockTimestampSec: Big('1605151412'),
-        //   endAtSec: Big('1605151412'),
-        //   durationSec: Big('259200'),
-        // },
-      ];
+      const schedules = [];
 
       for (let b = 0; b < noOfSchedules.toNumber(); b++) {
         const schedule = await stakingContract.unlockSchedules(
@@ -157,6 +149,7 @@ export function StatsProvider({ children }) {
             .mul(s)
             .div(N);
       let apy = monthlyUnlockRate.mul(12);
+      console.log(monthlyUnlockRate.toString());
       if (apy.gte(1e6)) {
         apy = Big(1e6);
       }
@@ -187,9 +180,11 @@ export function StatsProvider({ children }) {
       stakingContract.totalStakedFor(address),
     ]);
     setAvailableCakeRewards(Big(availableCakeRewards));
-    setAvailableDittoRewards(Big('0'));
-
     setTotalStakedFor(Big(totalStakedFor));
+
+    setAvailableDittoRewards(
+      await stakingContract.callStatic.unstakeQuery(totalStakedFor)
+    );
 
     // Promise.all([
     //   totalLocked(),
@@ -267,4 +262,15 @@ export function useStats() {
     totalStakedFor,
     userStakingShareSeconds,
   };
+}
+
+async function getCoinUsdPrices(assetsCoinGeckoIds) {
+  const prices = await request.get(
+    'https://api.coingecko.com/api/v3/simple/price',
+    {
+      ids: assetsCoinGeckoIds.join(','),
+      vs_currencies: 'usd',
+    }
+  );
+  return assetsCoinGeckoIds.map(id => Big(prices[id].usd));
 }
