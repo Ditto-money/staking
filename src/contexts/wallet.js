@@ -35,7 +35,7 @@ export function WalletProvider({ children }) {
   const [dittoAddress, setDittoAddress] = React.useState(null);
   const [dittoDecimals] = React.useState(9);
 
-  const [wrappedBNBDecimals] = React.useState(9);
+  const [wrappedBNBDecimals] = React.useState(18);
 
   const [signer, setSigner] = React.useState(null);
   const [address, setAddress] = React.useState(null);

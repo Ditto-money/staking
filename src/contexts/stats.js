@@ -92,9 +92,7 @@ export function StatsProvider({ children }) {
     const P = A.mul(C);
 
     const I = w.div(E);
-    const N = O.add(P)
-      .mul(I)
-      .div(1e9); // div 1e9: probably an issue in smart contract
+    const N = O.add(P).mul(I);
 
     // console.log(
     //   Object.entries({ N, O, P, I, k, T, A, C, w, E }).reduce((r, [k, v]) => {
