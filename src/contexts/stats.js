@@ -43,7 +43,7 @@ export function StatsProvider({ children }) {
     Big('0')
   );
 
-  const loadStats = async () => {
+  const loadPoolStats = async () => {
     if (
       !(
         stakingContract &&
@@ -162,18 +162,29 @@ export function StatsProvider({ children }) {
     }
   };
 
-  React.useEffect(() => {
-    loadStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    stakingContract,
-    lpContract,
-    wrappedBNBContract,
-    dittoContract,
-    lpAddress,
-    lpDecimals,
-    wrappedBNBDecimals,
-    dittoDecimals,
-  ]);
+  const subscribeToPoolStats = () => {
+    if (!stakingContract) return;
+    const stakedEvent = stakingContract.filters.Staked();
+    const unstakedEvent = stakingContract.filters.Unstaked();
+    stakingContract.on(stakedEvent, loadPoolStats);
+    stakingContract.on(unstakedEvent, loadPoolStats);
+    return () => {
+      stakingContract.off(stakedEvent, loadPoolStats);
+      stakingContract.off(unstakedEvent, loadPoolStats);
+    };
+  };
+
+  const subscribeToUserStats = () => {
+    if (!(stakingContract && address)) return;
+    const stakedEvent = stakingContract.filters.Staked();
+    const unstakedEvent = stakingContract.filters.Unstaked();
+    stakingContract.on(stakedEvent, loadUserStats);
+    stakingContract.on(unstakedEvent, loadUserStats);
+    return () => {
+      stakingContract.off(stakedEvent, loadUserStats);
+      stakingContract.off(unstakedEvent, loadUserStats);
+    };
+  };
 
   const loadUserStats = async () => {
     if (!(stakingContract && address)) return;
@@ -186,9 +197,9 @@ export function StatsProvider({ children }) {
       stakingContract.totalStakedFor(address),
       stakingContract.callStatic.updateAccounting(),
     ]);
-    const availableDittoRewards = await stakingContract.callStatic.unstakeQuery(
-      totalStakedFor
-    );
+    const availableDittoRewards = totalStakedFor.isZero()
+      ? '0'
+      : await stakingContract.callStatic.unstakeQuery(totalStakedFor);
     setAvailableCakeRewards(Big(availableCakeRewards));
     setTotalStakedFor(Big(totalStakedFor));
     setAvailableDittoRewards(Big(availableDittoRewards));
@@ -197,8 +208,23 @@ export function StatsProvider({ children }) {
   };
 
   React.useEffect(() => {
+    loadPoolStats();
+    return subscribeToPoolStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    stakingContract,
+    lpContract,
+    wrappedBNBContract,
+    dittoContract,
+    lpAddress,
+    lpDecimals,
+    wrappedBNBDecimals,
+    dittoDecimals,
+  ]);
+
+  React.useEffect(() => {
     loadUserStats();
-  }, [stakingContract, address]); // eslint-disable-line react-hooks/exhaustive-deps
+    return subscribeToUserStats(); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stakingContract, address]);
 
   return (
     <StatsContext.Provider
