@@ -136,7 +136,7 @@ function GetLPTokens({ history }) {
       {!address ? null : (
         <Box mt={2}>
           <Typography variant="h5">
-            You have {formatUnits(balance, lpDecimals)} {lpName} Tokens.
+            You have ≈ {formatUnits(balance, lpDecimals)} {lpName} Tokens.
           </Typography>
         </Box>
       )}
@@ -342,7 +342,7 @@ function Deposit() {
     if (!(lpContract && address)) return;
     const depositAmount = await lpContract.balanceOf(address);
     if (isZero(depositAmount)) return;
-    setInputAmount(formatUnits(depositAmount, lpDecimals));
+    setInputAmount(formatUnits(depositAmount, lpDecimals, 18));
     setDepositMaxAmount(true);
     setMaxDepositAmount(depositAmount);
   };

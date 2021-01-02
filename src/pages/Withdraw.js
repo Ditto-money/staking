@@ -119,7 +119,7 @@ export default function() {
     if (!(stakingContract && address)) return;
     const totalStakedFor = await stakingContract.totalStakedFor(address);
     setTotalStakedFor(totalStakedFor);
-    setInputAmount(formatUnits(totalStakedFor, 18));
+    setInputAmount(formatUnits(totalStakedFor, 18, 18));
     setWithdrawMaxAmount(true);
     setMaxWithdrawAmount(totalStakedFor);
   };
@@ -171,7 +171,7 @@ export default function() {
         <Paper className={clsx(classes.rewards)}>
           <div>Amount to Withdraw:</div>
           <div>
-            {formatUnits(totalStakedFor, lpDecimals)} {lpName}
+            ≈ {formatUnits(totalStakedFor, lpDecimals)} {lpName}
           </div>
         </Paper>
 
