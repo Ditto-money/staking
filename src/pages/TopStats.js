@@ -12,7 +12,7 @@ const useStyles = makeStyles(theme => ({
   container: {
     paddingTop: 14,
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 1fr',
+    gridTemplateColumns: '1fr 1fr 1fr 1fr',
     columnGap: '10px',
   },
   box: {
@@ -70,6 +70,23 @@ export default function() {
         ],
         tip:
           'Amount of DITTO and CAKE rewards you will receive on unstaking. Note that unstaking resets your multiplier.',
+      },
+      {
+        name: 'Bonus pool share',
+        value: [
+          <div className="flex items-center">
+            - BNB&nbsp;
+            <Box ml={1} className="flex items-center">
+              <img src="coins/BNB.png" alt="BNB" width={15} height={15} />
+            </Box>
+          </div>,
+          <div className="flex items-center">
+            COMING SOON{' '}
+            {/*To receive this bonus amount, you must stake until the end of the program.*/}
+          </div>,
+        ],
+        tip:
+          'Amount of bonus pool tokens earned. To claim this bonus you must stake until the end of this staking program. You The larger your deposit and the longer you stake, the more bonus shares you will accumulate.',
       },
     ],
     [

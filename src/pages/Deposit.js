@@ -284,7 +284,7 @@ function Deposit() {
     const n = Big(depositAmount).div(10 ** lpDecimals);
     if (isZero(n)) return Big('0');
 
-    const r = 2592e3;
+    const r = Big(2592e3);
     const t = {
       totalStakingShares,
       totalStaked: totalStaked.div(10 ** lpDecimals),

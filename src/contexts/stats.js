@@ -130,7 +130,7 @@ export function StatsProvider({ children }) {
     const s = totalLockedShares.div(1e18);
     const a = totalLocked;
     const m = parseInt(Date.now() / 1e3);
-    const i = Big((60 * 60 * 24 * 30).toString()); // 2592e3
+    const i = Big(2592e3);
 
     const ip = (t, e) => (t.gte(e) ? t : e);
     const op = (t, e) => (t.lte(e) ? t : e);
