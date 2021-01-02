@@ -1,5 +1,4 @@
 import React from 'react';
-// import * as ethers from 'ethers';
 import { Big, isZero } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
 import * as request from 'utils/request';
@@ -148,7 +147,7 @@ export function StatsProvider({ children }) {
   }, [totalLockedShares, totalLocked, schedules]);
 
   const apy = React.useMemo(() => {
-    if (!(!isZero(monthlyUnlockRate), !isZero(totalUSDDeposits)))
+    if (!(!isZero(monthlyUnlockRate) && !isZero(totalUSDDeposits)))
       return Big('0');
 
     let apy = monthlyUnlockRate
@@ -201,9 +200,7 @@ export function StatsProvider({ children }) {
     const schedules = [];
     if (!noOfSchedules.isZero()) {
       for (let b = 0; b < noOfSchedules.toNumber(); b++) {
-        const schedule = await stakingContract.unlockSchedules(
-          noOfSchedules.sub(1).toNumber()
-        );
+        const schedule = await stakingContract.unlockSchedules(b);
         schedules.push({
           initialLockedShares: Big(schedule.initialLockedShares),
           unlockedShares: Big(schedule.unlockedShares),
