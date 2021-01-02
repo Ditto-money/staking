@@ -1,7 +1,8 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Paper } from '@material-ui/core';
+import { Box, Paper, Tooltip } from '@material-ui/core';
+import { Help as TipIcon } from '@material-ui/icons';
 import { BORDER_RADIUS } from 'config';
 import { formatUnits, toFixed } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
@@ -23,6 +24,12 @@ const useStyles = makeStyles(theme => ({
     borderRadius: BORDER_RADIUS,
     background: '#555',
     color: 'white',
+    position: 'relative',
+  },
+  boxTip: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
   },
 }));
 
@@ -36,10 +43,14 @@ export default function() {
       {
         name: 'APY',
         value: [`${toFixed(apy, 1, 2)}%`],
+        tip:
+          'APY is estimated for a new deposit over the next 30 days. The APY metric does not account for gains or losses from holding liquidity tokens, or gains from liquidity mining rewards distributed by the underlying plarform for holding liquidity tokens.',
       },
       {
         name: 'Reward Multiplier',
         value: ['1.0x'],
+        tip:
+          'Deposit liquidity for 14 days to achieve a 3x reward multiplier. The multiplier applies to DITTO rewards only.',
       },
       {
         name: 'Rewards Earned',
@@ -57,6 +68,8 @@ export default function() {
             </Box>
           </div>,
         ],
+        tip:
+          'Amount of DITTO and CAKE rewards you will receive on unstaking. Note that unstaking resets your multiplier.',
       },
     ],
     [
@@ -77,11 +90,14 @@ export default function() {
   );
 }
 
-function StatBox({ name, value }) {
+function StatBox({ name, value, tip }) {
   const classes = useStyles();
 
   return (
     <Paper className={clsx(classes.box)}>
+      <Tooltip title={tip}>
+        <TipIcon style={{ fontSize: 15 }} className={classes.boxTip} />
+      </Tooltip>
       <div>{name}</div>
       <div>
         {value.map((v, i) => (
