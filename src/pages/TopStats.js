@@ -48,8 +48,7 @@ export default function() {
       {
         name: 'APY',
         value: [`${toFixed(apy, 1, 2)}%`],
-        tip:
-          'APY is estimated for a new deposit over the next 30 days. The APY metric does not account for gains or losses from holding liquidity tokens, or gains from liquidity mining rewards distributed by the underlying plarform for holding liquidity tokens.',
+        tip: 'APY is estimated for a new deposit over the next 30 days.',
       },
       {
         name: 'Reward Multiplier',
