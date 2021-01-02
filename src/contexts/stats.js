@@ -7,6 +7,9 @@ const CAKE_APY = Big('115');
 
 const StatsContext = React.createContext(null);
 
+const ip = (t, e) => (t.gte(e) ? t : e);
+const op = (t, e) => (t.lte(e) ? t : e);
+
 export function StatsProvider({ children }) {
   const {
     stakingContract,
@@ -30,6 +33,8 @@ export function StatsProvider({ children }) {
   const [totalStakingShares, setTotalStakingShares] = React.useState(Big('0'));
   const [totalLocked, setTotalLocked] = React.useState(Big('0'));
   const [totalSupply, setTotalSupply] = React.useState(Big('0'));
+  const [startBonus, setStartBonus] = React.useState(Big('0'));
+  const [bonusPeriodSec, setBonusPeriodSec] = React.useState(Big('0'));
   const [poolBNBBalance, setPoolBNBBalance] = React.useState(Big('0'));
   const [poolDittoBalance, setPoolDittoBalance] = React.useState(Big('0'));
   const [schedules, setUnlockSchedules] = React.useState([]);
@@ -52,6 +57,7 @@ export function StatsProvider({ children }) {
   const [userStakingShareSeconds, setUserStakingShareSeconds] = React.useState(
     Big('0')
   );
+  const [totalUserRewards, setTotalUserRewards] = React.useState(Big('0'));
 
   const totalUSDDeposits = React.useMemo(() => {
     if (
@@ -132,9 +138,6 @@ export function StatsProvider({ children }) {
     const m = parseInt(Date.now() / 1e3);
     const i = Big(2592e3);
 
-    const ip = (t, e) => (t.gte(e) ? t : e);
-    const op = (t, e) => (t.lte(e) ? t : e);
-
     const vaa = schedules.reduce((t, schedule) => {
       return t.add(
         op(ip(schedule.endAtSec.sub(m), Big('0')), i)
@@ -162,6 +165,45 @@ export function StatsProvider({ children }) {
     return apy;
   }, [monthlyUnlockRate, totalUSDDeposits]);
 
+  const rewardMultiplier = React.useMemo(() => {
+    if (!!isZero(startBonus)) return Big('1');
+    const maxMultiplier = Big('1').div(startBonus);
+    const minMultiplier = 1;
+    const e = {
+      startBonus,
+      maxMultiplier,
+      minMultiplier,
+    };
+    const p = availableDittoRewards;
+    const m = totalUserRewards;
+    let w = e.startBonus;
+    const z = isZero(totalUserRewards) ? Big('1') : p.div(m);
+    if (m.gt(Big('0'))) {
+      w = ip(w, z);
+    }
+    const _ = w.sub(e.startBonus).div(Big(1).sub(e.startBonus));
+    const S = _.mul(e.maxMultiplier.sub(e.minMultiplier)).add(e.minMultiplier);
+    // console.log(
+    //   Object.entries({
+    //     p,
+    //     m,
+    //     w,
+    //     _,
+    //     S,
+    //     startBonus,
+    //     maxMultiplier,
+    //     minMultiplier,
+    //     a: w.sub(e.startBonus),
+    //     b: Big(1).sub(e.startBonus),
+    //     z,
+    //   }).reduce((r, [k, v]) => {
+    //     r[k] = v.toString();
+    //     return r;
+    //   }, {})
+    // );
+    return S;
+  }, [startBonus, totalUserRewards, availableDittoRewards]);
+
   const loadPoolStats = async () => {
     if (
       !(
@@ -181,6 +223,8 @@ export function StatsProvider({ children }) {
       totalLocked,
       noOfSchedules,
       totalSupply,
+      startBonus,
+      bonusPeriodSec,
       poolBNBBalance,
       poolDittoBalance,
       [bnbUSDPrice, dittoUSDPrice],
@@ -192,9 +236,13 @@ export function StatsProvider({ children }) {
       stakingContract.totalLocked(),
       stakingContract.unlockScheduleCount(),
       lpContract.totalSupply(),
+      stakingContract.startBonus(),
+      stakingContract.bonusPeriodSec(),
       wrappedBNBContract.balanceOf(lpAddress),
       dittoContract.balanceOf(lpAddress),
       getCoinUsdPrices(['wbnb', 'ditto']),
+      stakingContract.totalLocked(),
+      stakingContract.unlockScheduleCount(),
     ]);
 
     const schedules = [];
@@ -217,6 +265,8 @@ export function StatsProvider({ children }) {
     setTotalStakingShares(Big(totalStakingShares));
     setTotalLocked(Big(totalLocked));
     setTotalSupply(Big(totalSupply));
+    setStartBonus(Big(startBonus).div(100));
+    setBonusPeriodSec(Big(bonusPeriodSec));
     setPoolBNBBalance(Big(poolBNBBalance));
     setPoolDittoBalance(Big(poolDittoBalance));
     setBNBUSDPrice(Big(bnbUSDPrice));
@@ -229,7 +279,7 @@ export function StatsProvider({ children }) {
     const [
       availableCakeRewards,
       totalStakedFor,
-      [, userStakingShareSeconds, totalStakingShareSeconds],
+      [, , userStakingShareSeconds, totalStakingShareSeconds, totalUserRewards],
     ] = await Promise.all([
       stakingContract.pendingCakeByUser(address),
       stakingContract.totalStakedFor(address),
@@ -243,6 +293,7 @@ export function StatsProvider({ children }) {
     setAvailableDittoRewards(Big(availableDittoRewards));
     setTotalStakingShareSeconds(Big(totalStakingShareSeconds));
     setUserStakingShareSeconds(Big(userStakingShareSeconds));
+    setTotalUserRewards(Big(totalUserRewards));
   };
 
   const subscribeToPoolStats = () => {
@@ -299,6 +350,8 @@ export function StatsProvider({ children }) {
         totalStakingShares,
         totalLocked,
         totalSupply,
+        startBonus,
+        bonusPeriodSec,
         poolBNBBalance,
         poolDittoBalance,
         bnbUSDPrice,
@@ -315,6 +368,7 @@ export function StatsProvider({ children }) {
         monthlyUnlockRate,
         totalUSDDeposits,
         stakingEndSec,
+        rewardMultiplier,
       }}
     >
       {children}
@@ -334,6 +388,8 @@ export function useStats() {
     totalStakingShares,
     totalLocked,
     totalSupply,
+    startBonus,
+    bonusPeriodSec,
     poolBNBBalance,
     poolDittoBalance,
     schedules,
@@ -350,6 +406,7 @@ export function useStats() {
     monthlyUnlockRate,
     totalUSDDeposits,
     stakingEndSec,
+    rewardMultiplier,
   } = context;
 
   return {
@@ -359,6 +416,8 @@ export function useStats() {
     totalStakingShares,
     totalLocked,
     totalSupply,
+    startBonus,
+    bonusPeriodSec,
     poolBNBBalance,
     poolDittoBalance,
     schedules,
@@ -375,6 +434,7 @@ export function useStats() {
     monthlyUnlockRate,
     totalUSDDeposits,
     stakingEndSec,
+    rewardMultiplier,
   };
 }
 

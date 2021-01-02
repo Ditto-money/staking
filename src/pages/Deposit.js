@@ -341,6 +341,7 @@ function Deposit() {
   const onSetDepositMaxAmount = async () => {
     if (!(lpContract && address)) return;
     const depositAmount = await lpContract.balanceOf(address);
+    if (isZero(depositAmount)) return;
     setInputAmount(formatUnits(depositAmount, lpDecimals));
     setDepositMaxAmount(true);
     setMaxDepositAmount(depositAmount);

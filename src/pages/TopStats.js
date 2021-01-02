@@ -36,7 +36,12 @@ const useStyles = makeStyles(theme => ({
 export default function() {
   const classes = useStyles();
   const { dittoDecimals, cakeDecimals } = useWallet();
-  const { apy, availableDittoRewards, availableCakeRewards } = useStats();
+  const {
+    apy,
+    availableDittoRewards,
+    availableCakeRewards,
+    rewardMultiplier,
+  } = useStats();
 
   const stats = React.useMemo(
     () => [
@@ -48,7 +53,7 @@ export default function() {
       },
       {
         name: 'Reward Multiplier',
-        value: ['1.0x'],
+        value: [`${toFixed(rewardMultiplier, 1, 1)}x`],
         tip:
           'Deposit liquidity for 14 days to achieve a 3x reward multiplier. The multiplier applies to DITTO rewards only.',
       },
@@ -95,6 +100,7 @@ export default function() {
       availableCakeRewards,
       dittoDecimals,
       cakeDecimals,
+      rewardMultiplier,
     ]
   );
 
