@@ -90,7 +90,7 @@ export default function() {
           </div>,
         ],
         tip:
-          'Amount of bonus pool tokens earned. To claim this bonus you must stake until the end of this staking program. You The larger your deposit and the longer you stake, the more bonus shares you will accumulate.',
+          'Amount of bonus pool tokens earned. To claim this bonus you must stake until the end of this staking program. The larger your deposit and the longer you stake, the more bonus shares you will accumulate.',
       },
     ],
     [
