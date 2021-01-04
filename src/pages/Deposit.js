@@ -394,6 +394,7 @@ function Deposit() {
         </div>
       )}
 
+      {/*
       <Box mt={2}>
         <Paper className={clsx(classes.rewards)}>
           <div>Your Estimated Rewards:</div>
@@ -401,6 +402,7 @@ function Deposit() {
           <div>plus CAKE depending on Pancakeswap emission.</div>
         </Paper>
       </Box>
+      */}
 
       <Box mt={2}>
         <Button
