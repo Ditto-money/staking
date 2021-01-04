@@ -76,11 +76,17 @@ function Countdown({ to }) {
 
   React.useEffect(() => {
     if (isZero(to)) return;
-    const id = setInterval(() => {
+    let id = setInterval(() => {
+      if (moment.unix(to).isBefore(moment.utc())) {
+        setDuration('Ended');
+        clearInterval(id);
+        id = null;
+        return;
+      }
       setDuration(`${moment.unix(to).from(moment.utc(), true)} left`);
     }, 1000);
     return () => {
-      clearInterval(id);
+      if (id) clearInterval(id);
     };
   }, [to]);
 
