@@ -162,6 +162,9 @@ export function StatsProvider({ children }) {
       apy = Big(1e6);
     }
 
+    // todo:
+    apy = apy.div(5);
+
     return apy;
   }, [monthlyUnlockRate, totalUSDDeposits]);
 
