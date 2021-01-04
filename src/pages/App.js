@@ -62,7 +62,7 @@ export default function App() {
               <Route path={'/deposit'} component={Deposit} />
               <Route exact path={'/withdraw'} component={Withdraw} />
               <Route exact path={'/stats'} component={Stats} />
-              <Redirect to={'/stats'} />
+              <Redirect to={'/deposit'} />
             </Switch>
           </Box>
         </Paper>
