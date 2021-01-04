@@ -45,10 +45,10 @@ export default function App() {
       <Router basename={ROUTER_BASE_NAME}>
         <Header />
         {!SHOW_BETA_MOVED ? null : (
-          <Box className="text-center" style={{ color: '#d32f2f' }}>
+          <Box className="text-center" style={{ color: '#aaa' }}>
             Beta staking has moved. Beta testers who want to unstake and claim
             rewards can do so{' '}
-            <a href="/beta" style={{ color: '#d32f2f' }}>
+            <a href="/beta" style={{ color: '#ddd' }}>
               here
             </a>
             .
