@@ -1,6 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Paper } from '@material-ui/core';
+import { Paper, Box } from '@material-ui/core';
 import {
   HashRouter as Router,
   Route,
@@ -15,6 +15,8 @@ import Withdraw from './Withdraw';
 import Deposit from './Deposit';
 import Stats from './Stats';
 import ConnectWallet from './ConnectWallet';
+
+const SHOW_BETA_MOVED = !~window.location.href.indexOf('beta');
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -39,23 +41,33 @@ export default function App() {
   const classes = useStyles();
 
   return (
-    <div className={classes.container}>
+    <Box className={classes.container}>
       <Router basename={ROUTER_BASE_NAME}>
         <Header />
+        {!SHOW_BETA_MOVED ? null : (
+          <Box className="text-center" style={{ color: '#d32f2f' }}>
+            Beta staking has moved. Beta testers who want to unstake and claim
+            rewards can do so{' '}
+            <a href="/beta" style={{ color: '#d32f2f' }}>
+              here
+            </a>
+            .
+          </Box>
+        )}
         <TopStats />
         <Paper className={classes.paper}>
           <Nav />
-          <div className={classes.tabContent}>
+          <Box className={classes.tabContent}>
             <Switch>
               <Route path={'/deposit'} component={Deposit} />
               <Route exact path={'/withdraw'} component={Withdraw} />
               <Route exact path={'/stats'} component={Stats} />
               <Redirect to={'/stats'} />
             </Switch>
-          </div>
+          </Box>
         </Paper>
         <ConnectWallet />
       </Router>
-    </div>
+    </Box>
   );
 }
