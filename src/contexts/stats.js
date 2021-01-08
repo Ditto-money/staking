@@ -152,10 +152,10 @@ export function StatsProvider({ children }) {
 
   const apy = React.useMemo(() => {
 
-    let BNB_APY = (bnbUSDPrice * 250) / totalUSDDeposits * 1730;
-
     if (!(!isZero(monthlyUnlockRate) && !isZero(totalUSDDeposits)))
       return Big('0');
+
+    let BNB_APY = bnbUSDPrice.mul(250).div(totalUSDDeposits).mul(1730);
 
     let apy = monthlyUnlockRate
       .div(totalUSDDeposits)
