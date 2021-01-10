@@ -1,10 +1,11 @@
 import React from 'react';
 import clsx from 'clsx';
+import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Paper, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
 import { BORDER_RADIUS } from 'config';
-import { formatUnits, toFixed } from 'utils/big-number';
+import { formatUnits, toFixed, isZero } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
 import { useStats } from 'contexts/stats';
 
@@ -31,16 +32,22 @@ const useStyles = makeStyles(theme => ({
     top: 5,
     right: 5,
   },
+  small: {
+    fontSize: 10,
+  },
 }));
 
 export default function() {
   const classes = useStyles();
-  const { dittoDecimals, cakeDecimals } = useWallet();
+  const { dittoDecimals, cakeDecimals, wrappedBNBDecimals } = useWallet();
   const {
     apy,
     availableDittoRewards,
     availableCakeRewards,
     rewardMultiplier,
+    bnbPonusPoolSharePercentage,
+    bnbPonusPoolShareAmount,
+    stakingEndSec,
   } = useStats();
 
   const stats = React.useMemo(
@@ -76,17 +83,28 @@ export default function() {
           'Amount of DITTO and CAKE rewards you will receive on unstaking. Note that unstaking resets your multiplier.',
       },
       {
-        name: 'Bonus pool share',
+        name: 'Projected Bonus Share',
         value: [
           <div className="flex items-center">
-            - BNB&nbsp;
+            {toFixed(bnbPonusPoolSharePercentage, 0.01, 2)} %
+          </div>,
+          <div className="flex items-center">
+            {formatUnits(bnbPonusPoolShareAmount, wrappedBNBDecimals)} BNB&nbsp;
             <Box ml={1} className="flex items-center">
               <img src="coins/BNB.png" alt="BNB" width={15} height={15} />
             </Box>
           </div>,
-          <div className="flex items-center">
-            COMING SOON{' '}
-            {/*To receive this bonus amount, you must stake until the end of the program.*/}
+          <div>
+            {isZero(stakingEndSec) ? null : (
+              <div className={classes.small}>
+                To receive this reward you must stake until{' '}
+                {moment
+                  .unix(stakingEndSec)
+                  .local()
+                  .format('MMM D, YYYY')}
+                .
+              </div>
+            )}
           </div>,
         ],
         tip:
@@ -99,7 +117,12 @@ export default function() {
       availableCakeRewards,
       dittoDecimals,
       cakeDecimals,
+      wrappedBNBDecimals,
       rewardMultiplier,
+      bnbPonusPoolShareAmount,
+      bnbPonusPoolSharePercentage,
+      stakingEndSec,
+      classes.small,
     ]
   );
 

@@ -133,7 +133,7 @@ export function StatsProvider({ children }) {
     if (!(!isZero(totalLockedShares) && !isZero(totalLocked) && schedules))
       return Big('0');
 
-    const totalLockedSharesNormalized = totalLockedShares.div(1e18);
+    // const totalLockedSharesNormalized = totalLockedShares.div(1e18);
 
     const m = parseInt(Date.now() / 1e3);
     const i = Big(604800);
@@ -146,16 +146,22 @@ export function StatsProvider({ children }) {
       );
     }, Big('0'));
 
-    return isZero(totalLocked) ? Big('0') : scheduleSharesEmitted.div(totalLockedShares).mul(totalLocked).div(1e9);
-
+    return isZero(totalLocked)
+      ? Big('0')
+      : scheduleSharesEmitted
+          .div(totalLockedShares)
+          .mul(totalLocked)
+          .div(1e9);
   }, [totalLockedShares, totalLocked, schedules]);
 
   const apy = React.useMemo(() => {
-
     if (!(!isZero(monthlyUnlockRate) && !isZero(totalUSDDeposits)))
       return Big('0');
 
-    let BNB_APY = bnbUSDPrice.mul(250).div(totalUSDDeposits).mul(1730);
+    let BNB_APY = bnbUSDPrice
+      .mul(250)
+      .div(totalUSDDeposits)
+      .mul(1730);
 
     let apy = monthlyUnlockRate
       .div(totalUSDDeposits)
@@ -169,7 +175,7 @@ export function StatsProvider({ children }) {
     }
 
     return apy;
-  }, [monthlyUnlockRate, totalUSDDeposits]);
+  }, [monthlyUnlockRate, totalUSDDeposits, bnbUSDPrice]);
 
   const rewardMultiplier = React.useMemo(() => {
     if (!!isZero(startBonus)) return Big('1');
@@ -209,6 +215,16 @@ export function StatsProvider({ children }) {
     // );
     return S;
   }, [startBonus, totalUserRewards, availableDittoRewards]);
+
+  const bnbPonusPoolSharePercentage = React.useMemo(() => {
+    if (isZero(totalStakingShareSeconds)) return Big('0');
+    return userStakingShareSeconds.div(totalStakingShareSeconds);
+  }, [userStakingShareSeconds, totalStakingShareSeconds]);
+
+  const bnbPonusPoolShareAmount = React.useMemo(() => {
+    const poolAmount = Big('250').mul(10 ** wrappedBNBDecimals); // total amount of BNB paid out
+    return poolAmount.mul(bnbPonusPoolSharePercentage);
+  }, [bnbPonusPoolSharePercentage, wrappedBNBDecimals]);
 
   const loadPoolStats = async () => {
     if (
@@ -375,6 +391,8 @@ export function StatsProvider({ children }) {
         totalUSDDeposits,
         stakingEndSec,
         rewardMultiplier,
+        bnbPonusPoolSharePercentage,
+        bnbPonusPoolShareAmount,
       }}
     >
       {children}
@@ -413,6 +431,8 @@ export function useStats() {
     totalUSDDeposits,
     stakingEndSec,
     rewardMultiplier,
+    bnbPonusPoolSharePercentage,
+    bnbPonusPoolShareAmount,
   } = context;
 
   return {
@@ -441,6 +461,8 @@ export function useStats() {
     totalUSDDeposits,
     stakingEndSec,
     rewardMultiplier,
+    bnbPonusPoolSharePercentage,
+    bnbPonusPoolShareAmount,
   };
 }
 
