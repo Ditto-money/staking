@@ -20,7 +20,6 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
     flexGrow: 1,
     flexDirection: 'column',
-    justifyContent: 'center',
     padding: 20,
     borderRadius: BORDER_RADIUS,
     background: '#555',
@@ -31,6 +30,9 @@ const useStyles = makeStyles(theme => ({
     position: 'absolute',
     top: 5,
     right: 5,
+  },
+  boxTitle: {
+    fontSize: 11,
   },
   small: {
     fontSize: 10,
@@ -143,7 +145,7 @@ function StatBox({ name, value, tip }) {
       <Tooltip title={tip}>
         <TipIcon style={{ fontSize: 15 }} className={classes.boxTip} />
       </Tooltip>
-      <div>{name}</div>
+      <div className={clsx(classes.boxTitle)}>{name}</div>
       <div>
         {value.map((v, i) => (
           <div key={i}>{v}</div>
