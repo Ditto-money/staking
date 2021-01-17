@@ -1,5 +1,6 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import clsx from 'clsx';
 import { Paper, Box } from '@material-ui/core';
 import {
   HashRouter as Router,
@@ -35,6 +36,12 @@ const useStyles = makeStyles(theme => ({
   tabContent: {
     padding: 20,
   },
+  betaMoved: {
+    color: theme.palette.isDark ? '#aaa' : '#777',
+  },
+  betaMovedHere: {
+    color: theme.palette.isDark ? '#ddd' : '#888',
+  },
 }));
 
 export default function App() {
@@ -45,10 +52,10 @@ export default function App() {
       <Router basename={ROUTER_BASE_NAME}>
         <Header />
         {!SHOW_BETA_MOVED ? null : (
-          <Box className="text-center" style={{ color: '#aaa' }}>
+          <Box className={clsx('text-center', classes.betaMoved)}>
             Beta staking has moved. Beta testers who want to unstake and claim
             rewards can do so{' '}
-            <a href="/beta" style={{ color: '#ddd' }}>
+            <a href="/beta" className={classes.betaMoved}>
               here
             </a>
             .

@@ -1,12 +1,23 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
-import { Link } from 'react-router-dom';
-import { AppBar, Typography, Toolbar, Button } from '@material-ui/core';
-import { APP_TITLE } from 'config';
+import {
+  AppBar,
+  Typography,
+  Toolbar,
+  IconButton,
+  Tooltip,
+  Button,
+} from '@material-ui/core';
+import LightIcon from '@material-ui/icons/Brightness1';
+import DarkIcon from '@material-ui/icons/Brightness2';
+import { useTheme } from 'contexts/theme';
 import { useWallet } from 'contexts/wallet';
+import { APP_TITLE } from 'config';
 
 const useStyles = makeStyles(theme => ({
-  container: {},
+  container: {
+    boxShadow: 'none',
+  },
   title: {
     color: theme.palette.primary.main,
     textDecoration: 'none',
@@ -22,6 +33,7 @@ const useStyles = makeStyles(theme => ({
 export default function Component() {
   const classes = useStyles();
   const { address, startConnecting, disconnect } = useWallet();
+  const { isDark, toggleTheme } = useTheme();
 
   const shortAddress =
     address && `${address.slice(0, 6)}....${address.slice(-4)}`;
@@ -30,10 +42,8 @@ export default function Component() {
     <AppBar position="fixed" color="inherit" className={classes.container}>
       <Toolbar color="inherit">
         <Typography variant="h6" className={'flex flex-grow'}>
-          <div className={'flex flex-col'} href="/">
-            <Link to="/" className={classes.title}>
-              {APP_TITLE}
-            </Link>
+          <div className={'flex items-center'} href="/">
+            {APP_TITLE}
           </div>
         </Typography>
 
@@ -50,6 +60,16 @@ export default function Component() {
             Connect Wallet
           </Button>
         )}
+
+        <Tooltip title="Toggle light/dark theme">
+          <IconButton
+            onClick={toggleTheme}
+            color="inherit"
+            aria-label="Toggle light/dark theme"
+          >
+            {isDark ? <LightIcon /> : <DarkIcon />}
+          </IconButton>
+        </Tooltip>
       </Toolbar>
     </AppBar>
   );

@@ -2,10 +2,10 @@ import React from 'react';
 import clsx from 'clsx';
 import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Paper, Tooltip } from '@material-ui/core';
+import { Box, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
-import { BORDER_RADIUS } from 'config';
 import { formatUnits, toFixed, isZero } from 'utils/big-number';
+import Paper from 'components/Paper';
 import { useWallet } from 'contexts/wallet';
 import { useStats } from 'contexts/stats';
 
@@ -21,9 +21,8 @@ const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     flexDirection: 'column',
     padding: 20,
-    borderRadius: BORDER_RADIUS,
-    background: '#555',
-    color: 'white',
+    background: theme.palette.isDark ? '#555' : '#fff',
+    color: theme.palette.isDark ? 'white' : '#373836',
     position: 'relative',
   },
   boxTip: {

@@ -33,8 +33,8 @@ export const useStyles = makeStyles(theme => ({
     flexGrow: 1,
     padding: 20,
     borderRadius: BORDER_RADIUS,
-    background: '#555',
-    color: 'white',
+    background: theme.palette.isDark ? '#555' : '#fff',
+    color: theme.palette.isDark ? 'white' : '#373836',
   },
   stats: {
     display: 'grid',

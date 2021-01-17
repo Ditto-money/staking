@@ -22,8 +22,8 @@ const useStyles = makeStyles(theme => ({
     justifyContent: 'center',
     padding: 20,
     borderRadius: BORDER_RADIUS,
-    background: '#555',
-    color: 'white',
+    background: theme.palette.isDark ? '#555' : '#fff',
+    color: theme.palette.isDark ? 'white' : '#373836',
   },
 }));
 
