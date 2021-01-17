@@ -8,4 +8,4 @@ Staking frontend for the Ditto Elastic Supply Currency.
     make
 ```
 
-Then visit http://localhost:4444
+Then visit http://localhost:3007
