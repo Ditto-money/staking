@@ -12,6 +12,8 @@ export const NETWORKS = {
   56: {
     stakingAddress: ~window.location.href.indexOf('beta')
       ? '0xEBB27125FdeAf15218DC4079C6528efB7f232019'
+      : ~window.location.href.indexOf('test')
+      ? '0x58673E13415Eb0443bd203ee48A554ac7462e673'
       : '0x27Da7Bc5CcB7c31baaeEA8a04CC8Bf0085017208',
   },
   97: {
@@ -31,3 +33,5 @@ export const EMPTY_CALL_DATA =
   '0x0000000000000000000000000000000000000000000000000000000000000001';
 
 export const ROUTER_BASE_NAME = process.env.ROUTER_BASE_NAME;
+
+export const SECONDARY_COLOR = '#ed7ac0';

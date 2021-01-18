@@ -7,7 +7,7 @@ import { BORDER_RADIUS } from 'config';
 const useStyles = makeStyles(theme => ({
   container: {
     marginTop: 10,
-    backgroundColor: '#222',
+    backgroundColor: theme.palette.isDark ? '#222' : '#eee',
     zIndex: 1,
     borderTopLeftRadius: BORDER_RADIUS,
     borderTopRightRadius: BORDER_RADIUS,
@@ -19,8 +19,8 @@ const useStyles = makeStyles(theme => ({
     display: 'flex',
     flexGrow: 1,
     justifyContent: 'center',
-    color: 'white',
-    borderBottom: '5px solid #555',
+    color: theme.palette.isDark ? 'white' : '#373836',
+    borderBottom: `5px solid ${theme.palette.isDark ? '#555' : '#ddd'}`,
     textDecoration: 'none',
     padding: '5px 0 15px',
     cursor: 'pointer',

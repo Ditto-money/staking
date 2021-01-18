@@ -9,7 +9,7 @@ import {
 import { CssBaseline } from '@material-ui/core';
 import { SnackbarProvider } from 'notistack';
 
-import muiTheme from 'utils/theme';
+import { ThemeProvider, useTheme, useMuiTheme } from 'contexts/theme';
 import { WalletProvider } from 'contexts/wallet';
 import { NotificationsProvider } from 'contexts/notifications';
 import { StatsProvider } from 'contexts/stats';
@@ -32,39 +32,51 @@ const useStyles = makeStyles(theme => ({
   document.body.appendChild(root);
 
   render(
-    <MuiThemeProvider theme={muiTheme}>
-      <CssBaseline />
+    <ThemeProvider>
       <Shell />
-    </MuiThemeProvider>,
+    </ThemeProvider>,
     document.getElementById('root')
   );
 })();
 
 function Shell() {
   const classes = useStyles();
+  const { isDark } = useTheme();
+  const muiTheme = useMuiTheme();
+
+  React.useEffect(() => {
+    const root = document.documentElement;
+    if (root.classList.contains(isDark ? 'light' : 'dark')) {
+      root.classList.remove(isDark ? 'light' : 'dark');
+      root.classList.add(isDark ? 'dark' : 'light');
+    }
+  }, [isDark]);
 
   return (
-    <SnackbarProvider
-      classes={{ root: classes.snackbar }}
-      maxSnack={4}
-      anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
-      }}
-      content={(key, data) => (
-        <div>
-          <Notification id={key} notification={data} />
-        </div>
-      )}
-    >
-      <NotificationsProvider>
-        <WalletProvider>
-          <StatsProvider>
-            <App />
-          </StatsProvider>
-        </WalletProvider>
-      </NotificationsProvider>
-    </SnackbarProvider>
+    <MuiThemeProvider theme={muiTheme}>
+      <CssBaseline />
+      <SnackbarProvider
+        classes={{ root: classes.snackbar }}
+        maxSnack={4}
+        anchorOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        content={(key, data) => (
+          <div>
+            <Notification id={key} notification={data} />
+          </div>
+        )}
+      >
+        <NotificationsProvider>
+          <WalletProvider>
+            <StatsProvider>
+              <App />
+            </StatsProvider>
+          </WalletProvider>
+        </NotificationsProvider>
+      </SnackbarProvider>
+    </MuiThemeProvider>
   );
 }
 
