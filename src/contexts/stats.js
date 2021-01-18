@@ -129,16 +129,16 @@ export function StatsProvider({ children }) {
     [schedules]
   );
 
-  const weeklyUnlockRate = React.useMemo(() => {
+  const hourlyUnlockRate = React.useMemo(() => {
     if (!(!isZero(totalLockedShares) && !isZero(totalLocked) && schedules))
       return Big('0');
 
     // const totalLockedSharesNormalized = totalLockedShares.div(1e18);
 
     const m = parseInt(Date.now() / 1e3);
-    const i = Big(604800);
+    const i = Big(3600);
 
-    const scheduleSharesEmitted = schedules.reduce((t, schedule) => {
+    const scheduleSharesEmittedPerHour = schedules.reduce((t, schedule) => {
       return t.add(
         min(max(schedule.endAtSec.sub(m), Big('0')), i)
           .div(schedule.durationSec)
@@ -148,14 +148,14 @@ export function StatsProvider({ children }) {
 
     return isZero(totalLocked)
       ? Big('0')
-      : scheduleSharesEmitted
+      : scheduleSharesEmittedPerHour
           .div(totalLockedShares)
           .mul(totalLocked)
           .div(1e9);
   }, [totalLockedShares, totalLocked, schedules]);
 
   const apy = React.useMemo(() => {
-    if (!(!isZero(weeklyUnlockRate) && !isZero(totalUSDDeposits)))
+    if (!(!isZero(hourlyUnlockRate) && !isZero(totalUSDDeposits)))
       return Big('0');
 
     let BNB_APY = bnbUSDPrice
@@ -163,9 +163,9 @@ export function StatsProvider({ children }) {
       .div(totalUSDDeposits)
       .mul(1730);
 
-    let apy = weeklyUnlockRate
+    let apy = hourlyUnlockRate
       .div(totalUSDDeposits)
-      .mul(52)
+      .mul(8760)
       .mul(100)
       .add(CAKE_APY)
       .add(BNB_APY);
@@ -175,7 +175,7 @@ export function StatsProvider({ children }) {
     }
 
     return apy;
-  }, [weeklyUnlockRate, totalUSDDeposits, bnbUSDPrice]);
+  }, [hourlyUnlockRate, totalUSDDeposits, bnbUSDPrice]);
 
   const rewardMultiplier = React.useMemo(() => {
     if (!!isZero(startBonus)) return Big('1');
@@ -387,7 +387,7 @@ export function StatsProvider({ children }) {
         userStakingShareSeconds,
 
         apy,
-        weeklyUnlockRate,
+        hourlyUnlockRate,
         totalUSDDeposits,
         stakingEndSec,
         rewardMultiplier,
@@ -427,7 +427,7 @@ export function useStats() {
     userStakingShareSeconds,
 
     apy,
-    weeklyUnlockRate,
+    hourlyUnlockRate,
     totalUSDDeposits,
     stakingEndSec,
     rewardMultiplier,
@@ -457,7 +457,7 @@ export function useStats() {
     userStakingShareSeconds,
 
     apy,
-    weeklyUnlockRate,
+    hourlyUnlockRate,
     totalUSDDeposits,
     stakingEndSec,
     rewardMultiplier,
