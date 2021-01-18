@@ -7,8 +7,8 @@ const CAKE_APY = Big('115');
 
 const StatsContext = React.createContext(null);
 
-const ip = (t, e) => (t.gte(e) ? t : e);
-const op = (t, e) => (t.lte(e) ? t : e);
+const max = (t, e) => (t.gte(e) ? t : e);
+const min = (t, e) => (t.lte(e) ? t : e);
 
 export function StatsProvider({ children }) {
   const {
@@ -129,7 +129,7 @@ export function StatsProvider({ children }) {
     [schedules]
   );
 
-  const monthlyUnlockRate = React.useMemo(() => {
+  const weeklyUnlockRate = React.useMemo(() => {
     if (!(!isZero(totalLockedShares) && !isZero(totalLocked) && schedules))
       return Big('0');
 
@@ -140,7 +140,7 @@ export function StatsProvider({ children }) {
 
     const scheduleSharesEmitted = schedules.reduce((t, schedule) => {
       return t.add(
-        op(ip(schedule.endAtSec.sub(m), Big('0')), i)
+        min(max(schedule.endAtSec.sub(m), Big('0')), i)
           .div(schedule.durationSec)
           .mul(schedule.initialLockedShares)
       );
@@ -155,7 +155,7 @@ export function StatsProvider({ children }) {
   }, [totalLockedShares, totalLocked, schedules]);
 
   const apy = React.useMemo(() => {
-    if (!(!isZero(monthlyUnlockRate) && !isZero(totalUSDDeposits)))
+    if (!(!isZero(weeklyUnlockRate) && !isZero(totalUSDDeposits)))
       return Big('0');
 
     let BNB_APY = bnbUSDPrice
@@ -163,7 +163,7 @@ export function StatsProvider({ children }) {
       .div(totalUSDDeposits)
       .mul(1730);
 
-    let apy = monthlyUnlockRate
+    let apy = weeklyUnlockRate
       .div(totalUSDDeposits)
       .mul(52)
       .mul(100)
@@ -175,7 +175,7 @@ export function StatsProvider({ children }) {
     }
 
     return apy;
-  }, [monthlyUnlockRate, totalUSDDeposits, bnbUSDPrice]);
+  }, [weeklyUnlockRate, totalUSDDeposits, bnbUSDPrice]);
 
   const rewardMultiplier = React.useMemo(() => {
     if (!!isZero(startBonus)) return Big('1');
@@ -191,7 +191,7 @@ export function StatsProvider({ children }) {
     let w = e.startBonus;
     const z = isZero(totalUserRewards) ? Big('1') : p.div(m);
     if (m.gt(Big('0'))) {
-      w = ip(w, z);
+      w = max(w, z);
     }
     const _ = w.sub(e.startBonus).div(Big(1).sub(e.startBonus));
     const S = _.mul(e.maxMultiplier.sub(e.minMultiplier)).add(e.minMultiplier);
@@ -387,7 +387,7 @@ export function StatsProvider({ children }) {
         userStakingShareSeconds,
 
         apy,
-        monthlyUnlockRate,
+        weeklyUnlockRate,
         totalUSDDeposits,
         stakingEndSec,
         rewardMultiplier,
@@ -427,7 +427,7 @@ export function useStats() {
     userStakingShareSeconds,
 
     apy,
-    monthlyUnlockRate,
+    weeklyUnlockRate,
     totalUSDDeposits,
     stakingEndSec,
     rewardMultiplier,
@@ -457,7 +457,7 @@ export function useStats() {
     userStakingShareSeconds,
 
     apy,
-    monthlyUnlockRate,
+    weeklyUnlockRate,
     totalUSDDeposits,
     stakingEndSec,
     rewardMultiplier,
