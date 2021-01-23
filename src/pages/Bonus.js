@@ -17,6 +17,7 @@ import { useNotifications } from 'contexts/notifications';
 import { useWallet } from 'contexts/wallet';
 import DROP_ABI from 'abis/merkle.json';
 import { NETWORK } from 'config';
+import * as request from 'utils/request';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -81,32 +82,83 @@ function Drop({ date, contract }) {
   const classes = useStyles();
 
   const [isWorking, setIsWorking] = React.useState(null);
+  const [claimInfo, setClaimInfo] = React.useState({});
+  const [isClaimed, setIsClaimed] = React.useState(false);
   const { address } = useWallet();
   const { tx } = useNotifications();
 
+  const canClaim = React.useMemo(() => {
+    return claimInfo.index !== undefined && !isClaimed;
+  }, [claimInfo.index, isClaimed]);
+
   const claim = async () => {
+    setIsWorking('Claiming...');
     try {
-      setIsWorking('Claiming...');
-      tx('Claiming...', 'Claimed!', await contract.claim(address));
+      await tx(
+        'Claiming...',
+        'Claimed!',
+        await contract.claim(
+          claimInfo.index,
+          address,
+          claimInfo.amount,
+          claimInfo.proof
+        )
+      );
     } finally {
       setIsWorking(false);
     }
   };
+
+  React.useEffect(() => {
+    if (!(contract && address)) return;
+
+    let isMounted = true;
+    const unsubs = [() => (isMounted = false)];
+
+    const load = async () => {
+      const claimInfo = await request.api(`/claim-info/${date}/${address}`);
+      if (isMounted) setClaimInfo(claimInfo ?? {});
+    };
+
+    load();
+    return () => {
+      unsubs.forEach(unsub => unsub());
+    };
+  }, [contract, address, date]);
+
+  React.useEffect(() => {
+    if (!(contract && claimInfo.index !== undefined)) return;
+
+    let isMounted = true;
+    const unsubs = [() => (isMounted = false)];
+
+    const load = async () => {
+      const isClaimed = await contract.isClaimed(claimInfo.index);
+      if (isMounted) {
+        setIsClaimed(isClaimed);
+      }
+    };
+
+    load();
+    return () => {
+      unsubs.forEach(unsub => unsub());
+    };
+  }, [contract, claimInfo.index]);
 
   return (
     <TableRow className={classes.rowx}>
       <TableCell component="th" scope="row">
         {date}
       </TableCell>
-      <TableCell>{formatUnits(10, 18)} BNB</TableCell>
+      <TableCell>{formatUnits(claimInfo.amount || 0, 18)} BNB</TableCell>
       <TableCell align="right">
         <Button
           color="secondary"
           variant="outlined"
           onClick={claim}
-          disabled={isWorking}
+          disabled={isWorking || isClaimed || !canClaim}
         >
-          {isWorking ? isWorking : 'CLAIM'}
+          {isWorking ? isWorking : isClaimed ? 'CLAIMED' : 'CLAIM'}
         </Button>
       </TableCell>
     </TableRow>

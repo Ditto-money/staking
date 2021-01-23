@@ -15,9 +15,13 @@ export const NETWORKS = {
       : ~window.location.href.indexOf('test')
       ? '0x58673E13415Eb0443bd203ee48A554ac7462e673'
       : '0x27Da7Bc5CcB7c31baaeEA8a04CC8Bf0085017208',
-    drops: new Map([
-      [~window.location.href.indexOf('beta') ? '0x' : '0x', '25-01-2020'],
-    ]),
+    drops:
+      ~window.location.href.indexOf('localhost') ||
+      ~window.location.href.indexOf('test')
+        ? new Map([
+            ['0x58673E13415Eb0443bd203ee48A554ac7462e673', '2020-01-25'],
+          ])
+        : new Map(),
   },
   97: {
     stakingAddress: '',
@@ -35,8 +39,10 @@ export const READ_WEB3_PROVIDER = IS_TESTNET
 export const EMPTY_CALL_DATA =
   '0x0000000000000000000000000000000000000000000000000000000000000001';
 
-export const ROUTER_BASE_NAME = process.env.ROUTER_BASE_NAME;
+export const ROUTER_BASE_NAME = process.env.REACT_APP_ROUTER_BASE_NAME;
 
 export const SECONDARY_COLOR = '#ed7ac0';
 
 export const NETWORK = NETWORKS[NETWORK_CHAIN_ID];
+
+export const API_URL = process.env.REACT_APP_API_URL;
