@@ -15,6 +15,9 @@ export const NETWORKS = {
       : ~window.location.href.indexOf('test')
       ? '0x58673E13415Eb0443bd203ee48A554ac7462e673'
       : '0x27Da7Bc5CcB7c31baaeEA8a04CC8Bf0085017208',
+    drops: new Map([
+      [~window.location.href.indexOf('beta') ? '0x' : '0x', '25-01-2020'],
+    ]),
   },
   97: {
     stakingAddress: '',
@@ -35,3 +38,5 @@ export const EMPTY_CALL_DATA =
 export const ROUTER_BASE_NAME = process.env.ROUTER_BASE_NAME;
 
 export const SECONDARY_COLOR = '#ed7ac0';
+
+export const NETWORK = NETWORKS[NETWORK_CHAIN_ID];
