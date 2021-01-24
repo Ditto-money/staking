@@ -1,7 +1,7 @@
 import React from 'react';
 import { ethers } from 'ethers';
 import {
-  NETWORKS,
+  NETWORK,
   READ_WEB3_PROVIDER,
   CACHE_WALLET_KEY,
   NETWORK_CHAIN_ID,
@@ -14,7 +14,7 @@ import ERC20_ABI from 'abis/erc20.json';
 export const READ_PROVIDER = new ethers.providers.JsonRpcProvider(
   READ_WEB3_PROVIDER
 );
-export const { stakingAddress: STAKING_ADDRESS } = NETWORKS[NETWORK_CHAIN_ID];
+export const { stakingAddress: STAKING_ADDRESS } = NETWORK;
 export const READ_STAKING_CONTRACT = new ethers.Contract(
   STAKING_ADDRESS,
   STAKING_ABI,

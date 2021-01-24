@@ -15,6 +15,7 @@ import Nav from './Nav';
 import Withdraw from './Withdraw';
 import Deposit from './Deposit';
 import Stats from './Stats';
+import Bonus from './Bonus';
 import ConnectWallet from './ConnectWallet';
 
 const SHOW_BETA_MOVED = !~window.location.href.indexOf('beta');
@@ -69,6 +70,7 @@ export default function App() {
               <Route path={'/deposit'} component={Deposit} />
               <Route exact path={'/withdraw'} component={Withdraw} />
               <Route exact path={'/stats'} component={Stats} />
+              <Route exact path={'/bonus'} component={Bonus} />
               <Redirect to={'/deposit'} />
             </Switch>
           </Box>

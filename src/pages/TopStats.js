@@ -1,6 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import moment from 'moment';
+import { Link } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
@@ -35,6 +36,10 @@ const useStyles = makeStyles(theme => ({
   },
   small: {
     fontSize: 10,
+  },
+  link: {
+    color: theme.palette.primary.main,
+    textDecoration: 'none',
   },
 }));
 
@@ -89,12 +94,12 @@ export default function() {
           <div className="flex items-center">
             {toFixed(bnbPonusPoolSharePercentage, 0.01, 2)} %
           </div>,
-          <div className="flex items-center">
+          <Link to="/bonus" className={clsx('flex items-center', classes.link)}>
             {formatUnits(bnbPonusPoolShareAmount, wrappedBNBDecimals)} BNB&nbsp;
             <Box ml={1} className="flex items-center">
               <img src="coins/BNB.png" alt="BNB" width={15} height={15} />
             </Box>
-          </div>,
+          </Link>,
           <div>
             {isZero(stakingEndSec) ? null : (
               <div className={classes.small}>
@@ -124,6 +129,7 @@ export default function() {
       bnbPonusPoolSharePercentage,
       stakingEndSec,
       classes.small,
+      classes.link,
     ]
   );
 

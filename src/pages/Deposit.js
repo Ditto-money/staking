@@ -1,12 +1,12 @@
 import React from 'react';
 import * as ethers from 'ethers';
-// import clsx from 'clsx';
+import clsx from 'clsx';
 import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
 import {
   Box,
-  // Paper,
+  Paper,
   Button,
   TextField,
   Stepper,
@@ -17,12 +17,7 @@ import {
 import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
-import {
-  formatUnits,
-  Big,
-  isZero,
-  // toFixed
-} from 'utils/big-number';
+import { formatUnits, Big, isZero, toFixed } from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import sleep from 'utils/sleep';
@@ -399,15 +394,13 @@ function Deposit() {
         </div>
       )}
 
-      {/*
-      <Box mt={2}>
+      <Box mt={2} style={{ display: 'none' }}>
         <Paper className={clsx(classes.rewards)}>
           <div>Your Estimated Rewards:</div>
           <div>{toFixed(monthlyDittoRewards, 1)} DITTO / month,</div>
           <div>plus CAKE depending on Pancakeswap emission.</div>
         </Paper>
       </Box>
-      */}
 
       <Box mt={2}>
         <Button
