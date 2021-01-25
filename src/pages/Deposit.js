@@ -1,12 +1,12 @@
 import React from 'react';
 import * as ethers from 'ethers';
-import clsx from 'clsx';
-import moment from 'moment';
+// import clsx from 'clsx';
+// import moment from 'moment';
 import { makeStyles } from '@material-ui/core/styles';
 import { withRouter, Switch, Route, Redirect } from 'react-router-dom';
 import {
   Box,
-  Paper,
+  // Paper,
   Button,
   TextField,
   Stepper,
@@ -17,11 +17,16 @@ import {
 import { STAKING_ADDRESS, useWallet } from 'contexts/wallet';
 import { useNotifications } from 'contexts/notifications';
 import Balance from 'components/Balance';
-import { formatUnits, Big, isZero, toFixed } from 'utils/big-number';
+import {
+  formatUnits,
+  // Big,
+  isZero,
+  // toFixed
+} from 'utils/big-number';
 import { BORDER_RADIUS, EMPTY_CALL_DATA } from 'config';
 import ERC20_CONTRACT_ABI from 'abis/erc20.json';
 import sleep from 'utils/sleep';
-import { useStats } from 'contexts/stats';
+// import { useStats } from 'contexts/stats';
 
 export const useStyles = makeStyles(theme => ({
   container: {
@@ -182,15 +187,15 @@ function Deposit() {
     lpAddress,
   } = useWallet();
 
-  const {
-    monthlyUnlockRate,
-    totalStakingShares,
-    totalStaked,
-    totalStakingShareSeconds,
-    totalStakedFor,
-    userStakingShareSeconds,
-    stakingEndSec,
-  } = useStats();
+  // const {
+  //   monthlyUnlockRate,
+  //   totalStakingShares,
+  //   totalStaked,
+  //   totalStakingShareSeconds,
+  //   totalStakedFor,
+  //   userStakingShareSeconds,
+  //   stakingEndSec,
+  // } = useStats();
 
   const [isApproving, setIsApproving] = React.useState(false);
   const [isApproved, setIsApproved] = React.useState(false);
@@ -265,73 +270,73 @@ function Deposit() {
     setIsApproved(allowance.gte(depositAmount));
   };
 
-  const monthlyDittoRewards = React.useMemo(() => {
-    if (
-      !(
-        depositAmount &&
-        !isZero(monthlyUnlockRate) &&
-        !isZero(totalStakingShares) &&
-        !isZero(totalStaked) &&
-        totalStakingShareSeconds &&
-        totalStakedFor &&
-        userStakingShareSeconds &&
-        lpDecimals &&
-        stakingEndSec
-      )
-    )
-      return Big('0');
+  // const monthlyDittoRewards = React.useMemo(() => {
+  //   if (
+  //     !(
+  //       depositAmount &&
+  //       !isZero(monthlyUnlockRate) &&
+  //       !isZero(totalStakingShares) &&
+  //       !isZero(totalStaked) &&
+  //       totalStakingShareSeconds &&
+  //       totalStakedFor &&
+  //       userStakingShareSeconds &&
+  //       lpDecimals &&
+  //       stakingEndSec
+  //     )
+  //   )
+  //     return Big('0');
 
-    const n = Big(depositAmount).div(10 ** lpDecimals);
-    if (isZero(n)) return Big('0');
+  //   const n = Big(depositAmount).div(10 ** lpDecimals);
+  //   if (isZero(n)) return Big('0');
 
-    const r = Big(2592e3);
-    const t = {
-      totalStakingShares,
-      totalStaked: totalStaked.div(10 ** lpDecimals),
-      totalStakingShareSeconds,
-    };
-    const e = {
-      totalStakedFor: totalStakedFor.div(10 ** lpDecimals),
-      userStakingShareSeconds,
-    };
-    const i = e.totalStakedFor.mul(t.totalStakingShares).div(t.totalStaked);
-    const o = n.mul(t.totalStakingShares).div(t.totalStaked);
-    const a1 = e.userStakingShareSeconds.add(i.add(o).mul(r));
-    const a2 = t.totalStakingShareSeconds.add(
-      t.totalStakingShares.add(o).mul(r)
-    );
-    const a = a1.div(a2);
+  //   const r = Big(2592e3);
+  //   const t = {
+  //     totalStakingShares,
+  //     totalStaked: totalStaked.div(10 ** lpDecimals),
+  //     totalStakingShareSeconds,
+  //   };
+  //   const e = {
+  //     totalStakedFor: totalStakedFor.div(10 ** lpDecimals),
+  //     userStakingShareSeconds,
+  //   };
+  //   const i = e.totalStakedFor.mul(t.totalStakingShares).div(t.totalStaked);
+  //   const o = n.mul(t.totalStakingShares).div(t.totalStaked);
+  //   const a1 = e.userStakingShareSeconds.add(i.add(o).mul(r));
+  //   const a2 = t.totalStakingShareSeconds.add(
+  //     t.totalStakingShares.add(o).mul(r)
+  //   );
+  //   const a = a1.div(a2);
 
-    // console.log(
-    //   Object.entries({
-    //     totalStakingShares: t.totalStakingShares,
-    //     totalStaked: t.totalStaked,
-    //     totalStakingShareSeconds: t.totalStakingShareSeconds,
-    //     totalStakedFor: e.totalStakedFor,
-    //     userStakingShareSeconds: e.userStakingShareSeconds,
-    //   }).reduce((r, [k, v]) => {
-    //     r[k] = v.toString();
-    //     return r;
-    //   }, {})
-    // );
-    // console.log(n.toString(), a.toString(), monthlyUnlockRate.toString());
+  //   // console.log(
+  //   //   Object.entries({
+  //   //     totalStakingShares: t.totalStakingShares,
+  //   //     totalStaked: t.totalStaked,
+  //   //     totalStakingShareSeconds: t.totalStakingShareSeconds,
+  //   //     totalStakedFor: e.totalStakedFor,
+  //   //     userStakingShareSeconds: e.userStakingShareSeconds,
+  //   //   }).reduce((r, [k, v]) => {
+  //   //     r[k] = v.toString();
+  //   //     return r;
+  //   //   }, {})
+  //   // );
+  //   // console.log(n.toString(), a.toString(), monthlyUnlockRate.toString());
 
-    let estimate = a.mul(monthlyUnlockRate).div(100);
-    if (moment.utc().isAfter(moment.unix(stakingEndSec))) {
-      estimate = estimate.mul(stakingEndSec).div(r);
-    }
-    return estimate;
-  }, [
-    depositAmount,
-    monthlyUnlockRate,
-    totalStakingShares,
-    totalStaked,
-    totalStakingShareSeconds,
-    totalStakedFor,
-    userStakingShareSeconds,
-    lpDecimals,
-    stakingEndSec,
-  ]);
+  //   let estimate = a.mul(monthlyUnlockRate).div(100);
+  //   if (moment.utc().isAfter(moment.unix(stakingEndSec))) {
+  //     estimate = estimate.mul(stakingEndSec).div(r);
+  //   }
+  //   return estimate;
+  // }, [
+  //   depositAmount,
+  //   monthlyUnlockRate,
+  //   totalStakingShares,
+  //   totalStaked,
+  //   totalStakingShareSeconds,
+  //   totalStakedFor,
+  //   userStakingShareSeconds,
+  //   lpDecimals,
+  //   stakingEndSec,
+  // ]);
 
   const onSetDepositAmount = event => {
     setDepositMaxAmount(false);
@@ -394,13 +399,13 @@ function Deposit() {
         </div>
       )}
 
-      <Box mt={2} style={{ display: 'none' }}>
+      {/* <Box mt={2}>
         <Paper className={clsx(classes.rewards)}>
           <div>Your Estimated Rewards:</div>
           <div>{toFixed(monthlyDittoRewards, 1)} DITTO / month,</div>
           <div>plus CAKE depending on Pancakeswap emission.</div>
         </Paper>
-      </Box>
+      </Box> */}
 
       <Box mt={2}>
         <Button
