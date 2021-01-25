@@ -3,7 +3,7 @@ import { Big, isZero } from 'utils/big-number';
 import { useWallet } from 'contexts/wallet';
 import * as request from 'utils/request';
 
-const CAKE_APY = Big('115');
+const CAKE_APY = Big('144');
 
 const StatsContext = React.createContext(null);
 
@@ -161,7 +161,7 @@ export function StatsProvider({ children }) {
     let BNB_APY = bnbUSDPrice
       .mul(250)
       .div(totalUSDDeposits)
-      .mul(1730);
+      .mul(1300);
 
     let apy = hourlyUnlockRate
       .div(totalUSDDeposits)
