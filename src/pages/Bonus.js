@@ -81,6 +81,7 @@ export default function({ history }) {
 function Drop({ date, contract }) {
   const classes = useStyles();
 
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const [isWorking, setIsWorking] = React.useState(null);
   const [claimInfo, setClaimInfo] = React.useState({});
   const [isClaimed, setIsClaimed] = React.useState(false);
@@ -88,8 +89,8 @@ function Drop({ date, contract }) {
   const { tx } = useNotifications();
 
   const canClaim = React.useMemo(() => {
-    return claimInfo.index !== undefined;
-  }, [claimInfo.index]);
+    return 'index' in claimInfo;
+  }, [claimInfo]);
 
   const didClaim = React.useMemo(() => {
     return canClaim && isClaimed;
@@ -119,7 +120,10 @@ function Drop({ date, contract }) {
 
     const load = async () => {
       const claimInfo = await request.api(`/claim-info/${date}/${address}`);
-      if (isMounted) setClaimInfo(claimInfo ?? {});
+      if (isMounted) {
+        setClaimInfo(claimInfo ?? {});
+        setIsLoaded(true);
+      }
     };
 
     load();
@@ -149,25 +153,29 @@ function Drop({ date, contract }) {
 
   return (
     <TableRow className={classes.rowx}>
-      <TableCell component="th" scope="row">
-        {date}
-      </TableCell>
-      <TableCell>
-        {canClaim
-          ? formatUnits(parseInt(claimInfo.amount.toString(), 16), 18)
-          : 0}{' '}
-        BNB
-      </TableCell>
-      <TableCell align="right">
-        <Button
-          color="secondary"
-          variant="outlined"
-          onClick={claim}
-          disabled={!!isWorking || didClaim}
-        >
-          {isWorking ? isWorking : didClaim ? 'CLAIMED' : 'CLAIM'}
-        </Button>
-      </TableCell>
+      {!isLoaded ? null : (
+        <>
+          <TableCell component="th" scope="row">
+            {date}
+          </TableCell>
+          <TableCell>
+            {canClaim
+              ? formatUnits(parseInt(Number(0x0c06496ef594ca), 10), 18)
+              : 0}{' '}
+            BNB
+          </TableCell>
+          <TableCell align="right">
+            <Button
+              color="secondary"
+              variant="outlined"
+              onClick={claim}
+              disabled={!!isWorking || !canClaim || didClaim}
+            >
+              {isWorking ? isWorking : didClaim ? 'CLAIMED' : 'CLAIM'}
+            </Button>
+          </TableCell>
+        </>
+      )}
     </TableRow>
   );
 }
