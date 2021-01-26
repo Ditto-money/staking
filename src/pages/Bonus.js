@@ -156,7 +156,7 @@ function Drop({ date, contract }) {
           color="secondary"
           variant="outlined"
           onClick={claim}
-          disabled={isWorking || isClaimed || !canClaim}
+          disabled={!!isWorking || !!isClaimed || !canClaim}
         >
           {isWorking ? isWorking : isClaimed ? 'CLAIMED' : 'CLAIM'}
         </Button>

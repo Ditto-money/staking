@@ -19,7 +19,7 @@ export const NETWORKS = {
       ~window.location.href.indexOf('localhost') ||
       ~window.location.href.indexOf('test')
         ? new Map([
-            ['0xF3d8c63f52A6aFa6cE589e9844Cbbd75e027773A', '2020-01-25'],
+            ['0x60E82FcaFaCC3D62c40DdA904a297A69D49d7bCA', '2021-01-25'],
           ])
         : new Map(),
   },
