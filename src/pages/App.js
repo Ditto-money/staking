@@ -18,8 +18,6 @@ import Stats from './Stats';
 import Bonus from './Bonus';
 import ConnectWallet from './ConnectWallet';
 
-const SHOW_BETA_MOVED = !~window.location.href.indexOf('beta');
-
 const useStyles = makeStyles(theme => ({
   container: {
     width: '960px',
@@ -52,16 +50,6 @@ export default function App() {
     <Box className={classes.container}>
       <Router basename={ROUTER_BASE_NAME}>
         <Header />
-        {!SHOW_BETA_MOVED ? null : (
-          <Box className={clsx('text-center', classes.betaMoved)}>
-            Beta staking has moved. Beta testers who want to unstake and claim
-            rewards can do so{' '}
-            <a href="/beta" className={classes.betaMoved}>
-              here
-            </a>
-            .
-          </Box>
-        )}
         <TopStats />
         <Paper className={classes.paper}>
           <Nav />
