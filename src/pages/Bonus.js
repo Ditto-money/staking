@@ -1,7 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
-import * as ethers from 'ethers';
 import {
   Dialog,
   Table,
@@ -15,9 +14,8 @@ import { Close as Icon } from '@material-ui/icons';
 import { formatUnits } from 'utils/big-number';
 import { useNotifications } from 'contexts/notifications';
 import { useWallet } from 'contexts/wallet';
-import DROP_ABI from 'abis/merkle.json';
-import { NETWORK } from 'config';
-import * as request from 'utils/request';
+import Loader from 'components/Loader';
+import { useBonuses } from 'contexts/bonuses';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -36,16 +34,7 @@ const useStyles = makeStyles(theme => ({
 
 export default function({ history }) {
   const classes = useStyles();
-  const { signer } = useWallet();
-
-  const drops = React.useMemo(() => {
-    if (!signer) return [];
-    return Array.from(NETWORK.drops.entries()).map(([address, date]) => ({
-      address,
-      date,
-      contract: new ethers.Contract(address, DROP_ABI, signer),
-    }));
-  }, [signer]);
+  const { drops, isLoaded } = useBonuses();
 
   const close = () => history.push('/');
 
@@ -56,45 +45,37 @@ export default function({ history }) {
           <div className={classes.x}>
             <Icon style={{ fontSize: 20 }} onClick={close} />
           </div>
-          <h3>Claim Bonusses</h3>
+          <h3>Claim Bonuses</h3>
 
-          <Table className={classes.tablex} aria-label="Bonus">
-            <TableHead>
-              <TableRow>
-                <TableCell>Date</TableCell>
-                <TableCell>Amount</TableCell>
-                <TableCell align="right"></TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {drops.map(({ date, contract }) => (
-                <Drop key={date} {...{ date, contract }} />
-              ))}
-            </TableBody>
-          </Table>
+          {!isLoaded ? (
+            <Loader />
+          ) : (
+            <Table className={classes.tablex} aria-label="Bonus">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Date</TableCell>
+                  <TableCell>Amount</TableCell>
+                  <TableCell align="right"></TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {drops.map(drop => (
+                  <Drop key={drop.date} {...drop} />
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </>
       </div>
     </Dialog>
   );
 }
 
-function Drop({ date, contract }) {
+function Drop({ date, canClaim, didClaim, contract, claimInfo }) {
   const classes = useStyles();
-
-  const [isLoaded, setIsLoaded] = React.useState(false);
   const [isWorking, setIsWorking] = React.useState(null);
-  const [claimInfo, setClaimInfo] = React.useState({});
-  const [isClaimed, setIsClaimed] = React.useState(false);
   const { address } = useWallet();
   const { tx } = useNotifications();
-
-  const canClaim = React.useMemo(() => {
-    return 'index' in claimInfo;
-  }, [claimInfo]);
-
-  const didClaim = React.useMemo(() => {
-    return canClaim && isClaimed;
-  }, [canClaim, isClaimed]);
 
   const claim = async () => {
     setIsWorking('Claiming...');
@@ -112,70 +93,25 @@ function Drop({ date, contract }) {
     }
   };
 
-  React.useEffect(() => {
-    if (!(contract && address)) return;
-
-    let isMounted = true;
-    const unsubs = [() => (isMounted = false)];
-
-    const load = async () => {
-      const claimInfo = await request.api(`/claim-info/${date}/${address}`);
-      if (isMounted) {
-        setClaimInfo(claimInfo ?? {});
-        setIsLoaded(true);
-      }
-    };
-
-    load();
-    return () => {
-      unsubs.forEach(unsub => unsub());
-    };
-  }, [contract, address, date]);
-
-  React.useEffect(() => {
-    if (!(contract && canClaim)) return;
-
-    let isMounted = true;
-    const unsubs = [() => (isMounted = false)];
-
-    const load = async () => {
-      const isClaimed = await contract.isClaimed(claimInfo.index);
-      if (isMounted) {
-        setIsClaimed(isClaimed);
-      }
-    };
-
-    load();
-    return () => {
-      unsubs.forEach(unsub => unsub());
-    };
-  }, [contract, canClaim, claimInfo.index]);
-
   return (
     <TableRow className={classes.rowx}>
-      {!isLoaded ? null : (
-        <>
-          <TableCell component="th" scope="row">
-            {date}
-          </TableCell>
-          <TableCell>
-            {canClaim
-              ? formatUnits(parseInt(Number(0x0c06496ef594ca), 10), 18)
-              : 0}{' '}
-            BNB
-          </TableCell>
-          <TableCell align="right">
-            <Button
-              color="secondary"
-              variant="outlined"
-              onClick={claim}
-              disabled={!!isWorking || !canClaim || didClaim}
-            >
-              {isWorking ? isWorking : didClaim ? 'CLAIMED' : 'CLAIM'}
-            </Button>
-          </TableCell>
-        </>
-      )}
+      <TableCell component="th" scope="row">
+        {date}
+      </TableCell>
+      <TableCell>
+        {canClaim ? formatUnits(parseInt(Number(0x0c06496ef594ca), 10), 18) : 0}{' '}
+        BNB
+      </TableCell>
+      <TableCell align="right">
+        <Button
+          color="secondary"
+          variant="outlined"
+          onClick={claim}
+          disabled={!!isWorking || !canClaim || didClaim}
+        >
+          {isWorking ? isWorking : didClaim ? 'CLAIMED' : 'CLAIM'}
+        </Button>
+      </TableCell>
     </TableRow>
   );
 }

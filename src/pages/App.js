@@ -1,11 +1,13 @@
 import React from 'react';
 import { makeStyles } from '@material-ui/core/styles';
+import clsx from 'clsx';
 import { Paper, Box } from '@material-ui/core';
 import {
   HashRouter as Router,
   Route,
   Switch,
   Redirect,
+  Link,
 } from 'react-router-dom';
 import { BORDER_RADIUS, ROUTER_BASE_NAME } from 'config';
 import Header from './Header';
@@ -16,6 +18,7 @@ import Deposit from './Deposit';
 import Stats from './Stats';
 import Bonus from './Bonus';
 import ConnectWallet from './ConnectWallet';
+import { useBonuses } from 'contexts/bonuses';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -34,21 +37,31 @@ const useStyles = makeStyles(theme => ({
   tabContent: {
     padding: 20,
   },
-  betaMoved: {
+  announcement: {
     color: theme.palette.isDark ? '#aaa' : '#777',
   },
-  betaMovedHere: {
+  announcementHere: {
     color: theme.palette.isDark ? '#ddd' : '#888',
   },
 }));
 
 export default function App() {
   const classes = useStyles();
+  const { hasPendingBonusClaim } = useBonuses();
 
   return (
     <Box className={classes.container}>
       <Router basename={ROUTER_BASE_NAME}>
         <Header />
+        {!hasPendingBonusClaim ? null : (
+          <Box className={clsx('text-center', classes.announcement)}>
+            You are eligible for a bonus! Claim it{' '}
+            <Link to={'/bonus'} className={classes.announcement}>
+              here
+            </Link>
+            .
+          </Box>
+        )}
         <TopStats />
         <Paper className={classes.paper}>
           <Nav />
