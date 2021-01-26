@@ -21,7 +21,9 @@ export const NETWORKS = {
         ? new Map([
             ['0xC32F5887840314aB000dbA3125d84466B97bd08B', '2021-01-25'],
           ])
-        : new Map(),
+        : new Map([
+            ['0xC32F5887840314aB000dbA3125d84466B97bd08B', '2021-01-25'],
+          ]),
   },
   97: {
     stakingAddress: '',

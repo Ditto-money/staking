@@ -23,23 +23,25 @@ export function BonusesProvider({ children }) {
 
     let isMounted = true;
     const unsubs = [() => (isMounted = false)];
+    const dropsConfig = Array.from(NETWORK.drops.entries()).map(
+      ([contractAddress, date]) => ({
+        date,
+        contract: new ethers.Contract(contractAddress, DROP_ABI, signer),
+      })
+    );
 
     const loadDrops = async () => {
-      const drops = await Promise.all(
-        Array.from(NETWORK.drops.entries()).map(loadDrop)
-      );
+      const ds = await Promise.all(dropsConfig.map(loadDrop));
 
       if (isMounted) {
-        setDrops(drops);
+        setDrops(ds);
         setIsLoaded(true);
       }
     };
 
-    const loadDrop = async ([contractAddress, date]) => {
+    const loadDrop = async ({ contract, date }) => {
       const claimInfo = await request.api(`/claim-info/${date}/${address}`);
       let didClaim = false;
-
-      const contract = new ethers.Contract(contractAddress, DROP_ABI, signer);
 
       const canClaim = 'index' in claimInfo;
       if (canClaim) {
@@ -57,7 +59,17 @@ export function BonusesProvider({ children }) {
       };
     };
 
+    const subscribe = () => {
+      dropsConfig.forEach(({ contract }) => {
+        // const claimEvent = contract.filters.Claimed(null, address);
+        const claimEvent = contract.filters.Claimed();
+        contract.on(claimEvent, loadDrops);
+        unsubs.push(() => contract.off(claimEvent, loadDrops));
+      });
+    };
+
     loadDrops();
+    subscribe();
     return () => {
       unsubs.forEach(unsub => unsub());
     };
