@@ -153,7 +153,10 @@ function Drop({ date, contract }) {
         {date}
       </TableCell>
       <TableCell>
-        {canClaim ? formatUnits(parseInt(claimInfo.amount, 16), 18) : 0} BNB
+        {canClaim
+          ? formatUnits(parseInt(claimInfo.amount.toString(), 16), 18)
+          : 0}{' '}
+        BNB
       </TableCell>
       <TableCell align="right">
         <Button
