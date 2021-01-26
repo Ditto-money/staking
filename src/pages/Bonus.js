@@ -88,16 +88,18 @@ function Drop({ date, contract }) {
   const { tx } = useNotifications();
 
   const canClaim = React.useMemo(() => {
-    return claimInfo.index !== undefined && !isClaimed;
-  }, [claimInfo.index, isClaimed]);
+    return claimInfo.index !== undefined;
+  }, [claimInfo.index]);
+
+  const didClaim = React.useMemo(() => {
+    return canClaim && isClaimed;
+  }, [canClaim, isClaimed]);
 
   const claim = async () => {
     setIsWorking('Claiming...');
     try {
-      await tx(
-        'Claiming...',
-        'Claimed!',
-        await contract.claim(
+      await tx('Claiming...', 'Claimed!', () =>
+        contract.claim(
           claimInfo.index,
           address,
           claimInfo.amount,
@@ -127,7 +129,7 @@ function Drop({ date, contract }) {
   }, [contract, address, date]);
 
   React.useEffect(() => {
-    if (!(contract && claimInfo.index !== undefined)) return;
+    if (!(contract && canClaim)) return;
 
     let isMounted = true;
     const unsubs = [() => (isMounted = false)];
@@ -143,22 +145,24 @@ function Drop({ date, contract }) {
     return () => {
       unsubs.forEach(unsub => unsub());
     };
-  }, [contract, claimInfo.index]);
+  }, [contract, canClaim, claimInfo.index]);
 
   return (
     <TableRow className={classes.rowx}>
       <TableCell component="th" scope="row">
         {date}
       </TableCell>
-      <TableCell>{formatUnits(claimInfo.amount || 0, 18)} BNB</TableCell>
+      <TableCell>
+        {canClaim ? formatUnits(parseInt(claimInfo.amount, 16), 18) : 0} BNB
+      </TableCell>
       <TableCell align="right">
         <Button
           color="secondary"
           variant="outlined"
           onClick={claim}
-          disabled={!!isWorking || !!isClaimed || !canClaim}
+          disabled={!!isWorking || didClaim}
         >
-          {isWorking ? isWorking : isClaimed ? 'CLAIMED' : 'CLAIM'}
+          {isWorking ? isWorking : didClaim ? 'CLAIMED' : 'CLAIM'}
         </Button>
       </TableCell>
     </TableRow>
