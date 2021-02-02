@@ -59,9 +59,9 @@ export default function() {
   const stats = React.useMemo(
     () => [
       {
-        name: 'APY',
+        name: 'APR',
         value: [`${toFixed(apy, 1, 2)}%`],
-        tip: 'APY is estimated for a new deposit over the next 30 days.',
+        tip: 'APR is estimated for a new deposit over the next 30 days.',
       },
       {
         name: 'Reward Multiplier',

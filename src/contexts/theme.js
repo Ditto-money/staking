@@ -76,7 +76,7 @@ export function useMuiTheme() {
         },
       },
       MuiPaper: {
-        root: {
+        rounded: {
           borderRadius: BORDER_RADIUS,
         },
       },
