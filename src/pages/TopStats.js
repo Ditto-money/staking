@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
@@ -91,12 +91,18 @@ export default function() {
       {
         name: 'Bonus distributions have ended.',
         value: [
-          <Link to="/bonus" className={clsx('flex items-center', classes.link)}>
-            Click here to claim bonuses.
+          <Box className={clsx('flex items-center', classes.link)}>
+            Bonuses will be claimable shortly.
             <Box ml={1} className="flex items-center">
               <img src="coins/BNB.png" alt="BNB" width={15} height={15} />
             </Box>
-          </Link>
+          </Box>,
+        //   <Link to="/bonus" className={clsx('flex items-center', classes.link)}>
+        //   Click here to claim bonuses.
+        //   <Box ml={1} className="flex items-center">
+        //     <img src="coins/BNB.png" alt="BNB" width={15} height={15} />
+        //   </Box>
+        // </Link>
         ],
         tip:
           'Amount of bonus pool tokens earned. To claim this bonus you must stake until the end of this staking program. The larger your deposit and the longer you stake, the more bonus shares you will accumulate.',
