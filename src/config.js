@@ -20,9 +20,11 @@ export const NETWORKS = {
       ~window.location.href.indexOf('test')
         ? new Map([
             ['0xC32F5887840314aB000dbA3125d84466B97bd08B', '2021-01-25'],
+          ['0x0272581681805A35fB93C957A5285b47f0373c1b', '2021-02-24']
           ])
         : new Map([
             ['0xC32F5887840314aB000dbA3125d84466B97bd08B', '2021-01-25'],
+          ['0x0272581681805A35fB93C957A5285b47f0373c1b', '2021-02-24']
           ]),
   },
   97: {

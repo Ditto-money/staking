@@ -1,11 +1,10 @@
 import React from 'react';
 import clsx from 'clsx';
-import moment from 'moment';
 import { Link } from 'react-router-dom';
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Tooltip } from '@material-ui/core';
 import { Help as TipIcon } from '@material-ui/icons';
-import { formatUnits, toFixed, isZero } from 'utils/big-number';
+import { formatUnits, toFixed } from 'utils/big-number';
 import Paper from 'components/Paper';
 import { useWallet } from 'contexts/wallet';
 import { useStats } from 'contexts/stats';
@@ -40,6 +39,7 @@ const useStyles = makeStyles(theme => ({
   link: {
     color: theme.palette.primary.main,
     textDecoration: 'none',
+    paddingTop: 5
   },
 }));
 
@@ -89,34 +89,20 @@ export default function() {
           'Amount of DITTO and CAKE rewards you will receive on unstaking. Note that unstaking resets your multiplier.',
       },
       {
-        name: 'Projected Bonus Share',
+        name: 'Bonus distributions have ended.',
         value: [
-          <div className="flex items-center">
-            {toFixed(bnbPonusPoolSharePercentage, 0.01, 2)} %
-          </div>,
           <Link to="/bonus" className={clsx('flex items-center', classes.link)}>
-            {formatUnits(bnbPonusPoolShareAmount, wrappedBNBDecimals)} BNB&nbsp;
+            Click here to claim bonuses.
             <Box ml={1} className="flex items-center">
               <img src="coins/BNB.png" alt="BNB" width={15} height={15} />
             </Box>
-          </Link>,
-          <div>
-            {isZero(stakingEndSec) ? null : (
-              <div className={classes.small}>
-                To receive this reward you must stake until{' '}
-                {moment
-                  .unix(stakingEndSec)
-                  .local()
-                  .format('MMM D, YYYY')}
-                .
-              </div>
-            )}
-          </div>,
+          </Link>
         ],
         tip:
           'Amount of bonus pool tokens earned. To claim this bonus you must stake until the end of this staking program. The larger your deposit and the longer you stake, the more bonus shares you will accumulate.',
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [
       apy,
       availableDittoRewards,
